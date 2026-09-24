@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as GSlugRouteImport } from './routes/g.$slug'
 import { Route as GSlugIndexRouteImport } from './routes/g.$slug.index'
+import { Route as GSlugExpensesRouteImport } from './routes/g.$slug.expenses'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -28,28 +29,36 @@ const GSlugIndexRoute = GSlugIndexRouteImport.update({
   path: '/',
   getParentRoute: () => GSlugRoute,
 } as any)
+const GSlugExpensesRoute = GSlugExpensesRouteImport.update({
+  id: '/expenses',
+  path: '/expenses',
+  getParentRoute: () => GSlugRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/g/$slug': typeof GSlugRouteWithChildren
+  '/g/$slug/expenses': typeof GSlugExpensesRoute
   '/g/$slug/': typeof GSlugIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/g/$slug/expenses': typeof GSlugExpensesRoute
   '/g/$slug': typeof GSlugIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/g/$slug': typeof GSlugRouteWithChildren
+  '/g/$slug/expenses': typeof GSlugExpensesRoute
   '/g/$slug/': typeof GSlugIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/g/$slug' | '/g/$slug/'
+  fullPaths: '/' | '/g/$slug' | '/g/$slug/expenses' | '/g/$slug/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/g/$slug'
-  id: '__root__' | '/' | '/g/$slug' | '/g/$slug/'
+  to: '/' | '/g/$slug/expenses' | '/g/$slug'
+  id: '__root__' | '/' | '/g/$slug' | '/g/$slug/expenses' | '/g/$slug/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -80,14 +89,23 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GSlugIndexRouteImport
       parentRoute: typeof GSlugRoute
     }
+    '/g/$slug/expenses': {
+      id: '/g/$slug/expenses'
+      path: '/expenses'
+      fullPath: '/g/$slug/expenses'
+      preLoaderRoute: typeof GSlugExpensesRouteImport
+      parentRoute: typeof GSlugRoute
+    }
   }
 }
 
 interface GSlugRouteChildren {
+  GSlugExpensesRoute: typeof GSlugExpensesRoute
   GSlugIndexRoute: typeof GSlugIndexRoute
 }
 
 const GSlugRouteChildren: GSlugRouteChildren = {
+  GSlugExpensesRoute: GSlugExpensesRoute,
   GSlugIndexRoute: GSlugIndexRoute,
 }
 
