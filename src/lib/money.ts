@@ -27,7 +27,7 @@ export function formatMinor(
   amountMinor: number,
   currency: string,
   exponent: number,
-  opts: { signed?: boolean; abs?: boolean } = {},
+  opts: { signed?: boolean | undefined; abs?: boolean | undefined } = {},
 ): string {
   const value = (opts.abs ? Math.abs(amountMinor) : amountMinor) / 10 ** exponent;
   const formatted = new Intl.NumberFormat("en-US", {
