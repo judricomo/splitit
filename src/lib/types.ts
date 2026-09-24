@@ -32,9 +32,9 @@ export interface Payer {
 /** Raw participant input as typed in the form (only one value field is used). */
 export interface ParticipantInput {
   member_id: string;
-  exact_minor?: number;
-  bp?: number;
-  shares?: number;
+  exact_minor?: number | undefined;
+  bp?: number | undefined;
+  shares?: number | undefined;
 }
 
 export interface SplitInput {
@@ -47,9 +47,9 @@ export interface SplitRow {
   member_id: string;
   owed_minor: number;
   is_rounding: boolean;
-  input_bp?: number;
-  input_shares?: number;
-  input_exact_minor?: number;
+  input_bp?: number | undefined;
+  input_shares?: number | undefined;
+  input_exact_minor?: number | undefined;
 }
 
 export interface Expense {
@@ -113,7 +113,7 @@ export interface ExpenseInput {
   description: string;
   total_minor: number;
   spent_on: string;
-  notes?: string | null;
+  notes?: string | null | undefined;
   payers: Payer[];
   split: SplitInput;
 }
@@ -123,7 +123,7 @@ export interface SettlementInput {
   to_member_id: string;
   amount_minor: number;
   settled_on: string;
-  note?: string | null;
+  note?: string | null | undefined;
 }
 
 export interface CreateGroupInput {
@@ -131,7 +131,7 @@ export interface CreateGroupInput {
   currency_code: string;
   my_name: string;
   member_names: string[];
-  pin?: string | null;
+  pin?: string | null | undefined;
 }
 
 /** RFC 9457-ish problem detail, matching the planned API error shape. */

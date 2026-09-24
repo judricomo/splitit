@@ -16,9 +16,9 @@ export function MemberDot({
   size = "md",
   className,
 }: {
-  member?: Member;
-  size?: "sm" | "md" | "lg";
-  className?: string;
+  member?: Member | undefined;
+  size?: "sm" | "md" | "lg" | undefined;
+  className?: string | undefined;
 }) {
   const sizes = {
     sm: "size-6 text-[10px]",
@@ -50,10 +50,10 @@ export function Money({
 }: {
   amountMinor: number;
   group: Pick<Group, "currency_code" | "currency_exponent">;
-  signed?: boolean;
-  abs?: boolean;
-  className?: string;
-  tone?: "auto" | "plain";
+  signed?: boolean | undefined;
+  abs?: boolean | undefined;
+  className?: string | undefined;
+  tone?: "auto" | "plain" | undefined;
 }) {
   const toneClass =
     tone === "plain"

@@ -235,7 +235,7 @@ function GroupLayout() {
         />
 
         <Dialog open={identityOpen} onOpenChange={setIdentityOpen}>
-          <DialogContent className="sm:max-w-sm" showCloseButton={false}>
+          <DialogContent className="sm:max-w-sm">
             <DialogHeader>
               <DialogTitle>Who are you?</DialogTitle>
               <DialogDescription>

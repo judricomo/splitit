@@ -382,10 +382,10 @@ export async function removeMember(slug: string, memberId: string): Promise<void
 // ----------------------------------------------------------------- expenses
 
 export interface ExpenseFilters {
-  member?: string;
-  q?: string;
-  from?: string;
-  to?: string;
+  member?: string | undefined;
+  q?: string | undefined;
+  from?: string | undefined;
+  to?: string | undefined;
 }
 
 /** GET /g/{slug}/expenses */

@@ -49,7 +49,7 @@ export function ExpenseDialog({
   slug: string;
   group: Group;
   actorId: string | null;
-  expense?: Expense | null;
+  expense?: Expense | null | undefined;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {

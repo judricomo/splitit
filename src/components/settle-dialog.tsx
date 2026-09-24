@@ -41,7 +41,7 @@ export function SettleDialog({
 }: {
   slug: string;
   group: Group;
-  prefill?: SettlePrefill | null;
+  prefill?: SettlePrefill | null | undefined;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
