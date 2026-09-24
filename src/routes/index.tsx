@@ -95,7 +95,11 @@ function Home() {
 
           <ul className="mt-8 grid gap-3 sm:grid-cols-3">
             {[
-              { icon: Split, title: "Four ways to split", text: "Equal, exact, percent or shares." },
+              {
+                icon: Split,
+                title: "Four ways to split",
+                text: "Equal, exact, percent or shares.",
+              },
               { icon: Receipt, title: "Several payers", text: "One bill, many wallets." },
               { icon: Scale, title: "Always balanced", text: "Down to the last cent." },
             ].map((f) => (

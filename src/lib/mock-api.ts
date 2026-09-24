@@ -106,10 +106,17 @@ function seedDb(): Db {
   };
 
   const expenses: Expense[] = [
-    build("exp_dinner", "Dinner", 100000, "2026-09-20", [{ member_id: ids.ana, paid_minor: 100000 }], {
-      method: "equal",
-      participants: [{ member_id: ids.ana }, { member_id: ids.luis }, { member_id: ids.marta }],
-    }),
+    build(
+      "exp_dinner",
+      "Dinner",
+      100000,
+      "2026-09-20",
+      [{ member_id: ids.ana, paid_minor: 100000 }],
+      {
+        method: "equal",
+        participants: [{ member_id: ids.ana }, { member_id: ids.luis }, { member_id: ids.marta }],
+      },
+    ),
     build("exp_taxi", "Taxi", 30000, "2026-09-21", [{ member_id: ids.luis, paid_minor: 30000 }], {
       method: "equal",
       participants: [{ member_id: ids.marta }, { member_id: ids.juan }],
@@ -349,7 +356,11 @@ export async function renameMember(slug: string, memberId: string, name: string)
     const member = group.members.find((m) => m.id === memberId);
     if (!member) throw new ApiError(404, "MEMBER_NOT_FOUND", "That member no longer exists.");
     const trimmed = name.trim();
-    if (group.members.some((m) => m.id !== memberId && !m.removed_at && m.name.toLowerCase() === trimmed.toLowerCase()))
+    if (
+      group.members.some(
+        (m) => m.id !== memberId && !m.removed_at && m.name.toLowerCase() === trimmed.toLowerCase(),
+      )
+    )
       throw new ApiError(409, "DUPLICATE_MEMBER", `"${trimmed}" is already in this group.`);
     member.name = trimmed;
     return clone(member);
@@ -406,7 +417,9 @@ export async function listExpenses(slug: string, filters: ExpenseFilters = {}): 
     }
     if (filters.from) rows = rows.filter((e) => e.spent_on >= filters.from!);
     if (filters.to) rows = rows.filter((e) => e.spent_on <= filters.to!);
-    rows.sort((a, b) => b.spent_on.localeCompare(a.spent_on) || b.created_at.localeCompare(a.created_at));
+    rows.sort(
+      (a, b) => b.spent_on.localeCompare(a.spent_on) || b.created_at.localeCompare(a.created_at),
+    );
     return clone(rows);
   });
 }
@@ -414,7 +427,11 @@ export async function listExpenses(slug: string, filters: ExpenseFilters = {}): 
 /** POST /g/{slug}/expenses/preview-split — shares without saving (FR-E5). */
 export async function previewSplit(
   slug: string,
-  body: { total_minor: number; split: SplitInput; payers: { member_id: string; paid_minor: number }[] },
+  body: {
+    total_minor: number;
+    split: SplitInput;
+    payers: { member_id: string; paid_minor: number }[];
+  },
 ): Promise<{ splits: SplitRow[] }> {
   return request("POST", `/g/${slug}/expenses/preview-split`, body, () => {
     const { rows, error } = computeSplits(body.total_minor, body.split, body.payers);
@@ -426,7 +443,8 @@ export async function previewSplit(
 function validateExpense(input: ExpenseInput) {
   if (input.description.trim().length < 1 || input.description.trim().length > 120)
     throw new ApiError(422, "INVALID_DESCRIPTION", "The description must be 1–120 characters.");
-  if (input.total_minor <= 0) throw new ApiError(422, "INVALID_TOTAL", "The total must be greater than 0.");
+  if (input.total_minor <= 0)
+    throw new ApiError(422, "INVALID_TOTAL", "The total must be greater than 0.");
   const payerError = validatePayers(input.total_minor, input.payers);
   if (payerError) throw new ApiError(422, "PAYERS_MISMATCH", payerError);
   const { rows, error } = computeSplits(input.total_minor, input.split, input.payers);
@@ -550,7 +568,8 @@ export async function deleteSettlement(slug: string, settlementId: string): Prom
   return request("DELETE", `/g/${slug}/settlements/${settlementId}`, undefined, () => {
     findGroup(slug);
     const settlement = load().settlements.find((s) => s.id === settlementId);
-    if (!settlement) throw new ApiError(404, "SETTLEMENT_NOT_FOUND", "That payment no longer exists.");
+    if (!settlement)
+      throw new ApiError(404, "SETTLEMENT_NOT_FOUND", "That payment no longer exists.");
     settlement.deleted_at = new Date().toISOString();
   });
 }

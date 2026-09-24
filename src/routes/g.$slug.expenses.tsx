@@ -41,7 +41,8 @@ function ExpensesPage() {
   const filters = { q: q.trim() || undefined, member: member === "all" ? undefined : member };
   const { data, isPending } = useQuery(expensesQuery(slug, filters));
 
-  const invalidate = () => groupKeys(slug).forEach((key) => void qc.invalidateQueries({ queryKey: key }));
+  const invalidate = () =>
+    groupKeys(slug).forEach((key) => void qc.invalidateQueries({ queryKey: key }));
 
   const remove = useMutation({
     mutationFn: (id: string) => api.deleteExpense(slug, id),
@@ -124,7 +125,12 @@ function ExpensesPage() {
                       {e.payers.map((p) => memberName(group, p.member_id)).join(" + ")} paid
                     </p>
                   </div>
-                  <Money amountMinor={e.total_minor} group={group} tone="plain" className="font-semibold" />
+                  <Money
+                    amountMinor={e.total_minor}
+                    group={group}
+                    tone="plain"
+                    className="font-semibold"
+                  />
                   <div className="flex gap-1">
                     <Button
                       variant="ghost"
@@ -150,7 +156,12 @@ function ExpensesPage() {
                     <span key={s.member_id} className="flex items-center gap-1.5 text-xs">
                       <MemberDot member={memberOf(group, s.member_id)} size="sm" />
                       {memberName(group, s.member_id)}
-                      <Money amountMinor={s.owed_minor} group={group} tone="plain" className="text-muted-foreground" />
+                      <Money
+                        amountMinor={s.owed_minor}
+                        group={group}
+                        tone="plain"
+                        className="text-muted-foreground"
+                      />
                     </span>
                   ))}
                 </div>

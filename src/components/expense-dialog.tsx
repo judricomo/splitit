@@ -20,12 +20,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { computeSplits, validatePayers } from "@/lib/ledger";
 import * as api from "@/lib/mock-api";
-import {
-  basisPointsToInput,
-  minorToInput,
-  parseToBasisPoints,
-  parseToMinor,
-} from "@/lib/money";
+import { basisPointsToInput, minorToInput, parseToBasisPoints, parseToMinor } from "@/lib/money";
 import { groupKeys } from "@/lib/queries";
 import { ApiError, type Expense, type Group, type SplitMethod } from "@/lib/types";
 
@@ -83,15 +78,22 @@ export function ExpenseDialog({
       setMultiPayer(expense.payers.length > 1);
       setSinglePayer(expense.payers[0]?.member_id ?? actorId ?? active[0]?.id ?? "");
       setPayerAmounts(
-        Object.fromEntries(expense.payers.map((p) => [p.member_id, minorToInput(p.paid_minor, exp)])),
+        Object.fromEntries(
+          expense.payers.map((p) => [p.member_id, minorToInput(p.paid_minor, exp)]),
+        ),
       );
       setExact(
         Object.fromEntries(
-          expense.splits.map((s) => [s.member_id, minorToInput(s.input_exact_minor ?? s.owed_minor, exp)]),
+          expense.splits.map((s) => [
+            s.member_id,
+            minorToInput(s.input_exact_minor ?? s.owed_minor, exp),
+          ]),
         ),
       );
       setPercent(
-        Object.fromEntries(expense.splits.map((s) => [s.member_id, basisPointsToInput(s.input_bp ?? 0)])),
+        Object.fromEntries(
+          expense.splits.map((s) => [s.member_id, basisPointsToInput(s.input_bp ?? 0)]),
+        ),
       );
       setShares(
         Object.fromEntries(expense.splits.map((s) => [s.member_id, String(s.input_shares ?? 1)])),
@@ -118,7 +120,10 @@ export function ExpenseDialog({
   const payers = useMemo(() => {
     if (!multiPayer) return singlePayer ? [{ member_id: singlePayer, paid_minor: totalMinor }] : [];
     return active
-      .map((m) => ({ member_id: m.id, paid_minor: parseToMinor(payerAmounts[m.id] ?? "", exp) ?? 0 }))
+      .map((m) => ({
+        member_id: m.id,
+        paid_minor: parseToMinor(payerAmounts[m.id] ?? "", exp) ?? 0,
+      }))
       .filter((p) => p.paid_minor > 0);
   }, [multiPayer, singlePayer, totalMinor, active, payerAmounts, exp]);
 
@@ -143,10 +148,15 @@ export function ExpenseDialog({
   const payerError = totalMinor > 0 ? validatePayers(totalMinor, payers) : "Enter an amount";
   const assigned = preview.rows.reduce((acc, r) => acc + r.owed_minor, 0);
   const remaining = totalMinor - assigned;
-  const remainingBp = 10000 - participants.reduce((acc, id) => acc + (parseToBasisPoints(percent[id] ?? "") ?? 0), 0);
+  const remainingBp =
+    10000 - participants.reduce((acc, id) => acc + (parseToBasisPoints(percent[id] ?? "") ?? 0), 0);
 
   const canSave =
-    description.trim().length > 0 && totalMinor > 0 && !payerError && !preview.error && participants.length > 0;
+    description.trim().length > 0 &&
+    totalMinor > 0 &&
+    !payerError &&
+    !preview.error &&
+    participants.length > 0;
 
   const mutation = useMutation({
     mutationFn: async () => {
@@ -275,7 +285,11 @@ export function ExpenseDialog({
 
           <div className="rounded-xl border bg-card p-4">
             <p className="text-sm font-medium">How is it split?</p>
-            <Tabs value={method} onValueChange={(v) => setMethod(v as SplitMethod)} className="mt-3">
+            <Tabs
+              value={method}
+              onValueChange={(v) => setMethod(v as SplitMethod)}
+              className="mt-3"
+            >
               <TabsList className="w-full">
                 {METHODS.map((m) => (
                   <TabsTrigger key={m.value} value={m.value} className="flex-1">

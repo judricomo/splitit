@@ -25,7 +25,8 @@ function PeoplePage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
 
-  const invalidate = () => groupKeys(slug).forEach((key) => void qc.invalidateQueries({ queryKey: key }));
+  const invalidate = () =>
+    groupKeys(slug).forEach((key) => void qc.invalidateQueries({ queryKey: key }));
   const onError = (error: unknown) =>
     toast.error(error instanceof ApiError ? error.message : "Something went wrong. Try again.");
 

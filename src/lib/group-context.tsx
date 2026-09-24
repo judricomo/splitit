@@ -13,7 +13,13 @@ interface GroupContextValue {
 
 const GroupContext = createContext<GroupContextValue | null>(null);
 
-export function GroupProvider({ value, children }: { value: GroupContextValue; children: ReactNode }) {
+export function GroupProvider({
+  value,
+  children,
+}: {
+  value: GroupContextValue;
+  children: ReactNode;
+}) {
   return <GroupContext.Provider value={value}>{children}</GroupContext.Provider>;
 }
 

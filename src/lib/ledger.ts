@@ -30,8 +30,10 @@ export interface SplitResult {
 /** Spec §4.2 — floor each raw share, then the primary payer absorbs the remainder. */
 export function computeSplits(totalMinor: number, split: SplitInput, payers: Payer[]): SplitResult {
   const parts = split.participants;
-  if (totalMinor <= 0) return { rows: [], leftover_minor: 0, error: "Total must be greater than 0" };
-  if (parts.length === 0) return { rows: [], leftover_minor: 0, error: "Pick at least one participant" };
+  if (totalMinor <= 0)
+    return { rows: [], leftover_minor: 0, error: "Total must be greater than 0" };
+  if (parts.length === 0)
+    return { rows: [], leftover_minor: 0, error: "Pick at least one participant" };
 
   const rows: SplitRow[] = [];
   let error: string | null = null;

@@ -189,7 +189,9 @@ function GroupLayout() {
           <nav className="mx-auto flex max-w-5xl gap-1 overflow-x-auto px-4">
             {TABS.map((tab) => {
               const href = tab.to.replace("$slug", slug);
-              const isActive = tab.exact ? pathname === href || pathname === `${href}/` : pathname.startsWith(href);
+              const isActive = tab.exact
+                ? pathname === href || pathname === `${href}/`
+                : pathname.startsWith(href);
               return (
                 <Link
                   key={tab.to}

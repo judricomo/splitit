@@ -6,12 +6,7 @@ import { useState } from "react";
 import { MemberDot, Money, memberName, memberOf } from "@/components/member-bits";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useGroupContext } from "@/lib/group-context";
 import { balancesQuery, breakdownQuery } from "@/lib/queries";
@@ -59,13 +54,19 @@ function BalancesPage() {
                     <span className="font-medium">
                       {youPay ? `You owe ${other}` : `${other} owes you`}
                     </span>
-                    <Money amountMinor={youPay ? -t.amount_minor : t.amount_minor} group={group} abs />
+                    <Money
+                      amountMinor={youPay ? -t.amount_minor : t.amount_minor}
+                      group={group}
+                      abs
+                    />
                     {youPay ? (
                       <Button
                         size="sm"
                         variant="secondary"
                         className="ml-auto"
-                        onClick={() => openSettle({ from: t.from, to: t.to, amount_minor: t.amount_minor })}
+                        onClick={() =>
+                          openSettle({ from: t.from, to: t.to, amount_minor: t.amount_minor })
+                        }
                       >
                         <HandCoins className="size-4" />
                         Mark as paid
@@ -100,7 +101,12 @@ function BalancesPage() {
                     {row.balance > 0 ? "gets back" : row.balance < 0 ? "owes" : "settled up"}
                   </p>
                 </div>
-                <Money amountMinor={row.balance} group={group} abs={row.balance !== 0} className="text-sm font-semibold" />
+                <Money
+                  amountMinor={row.balance}
+                  group={group}
+                  abs={row.balance !== 0}
+                  className="text-sm font-semibold"
+                />
               </button>
             );
           })}
@@ -130,11 +136,18 @@ function BalancesPage() {
                 <ArrowRight className="size-4 text-muted-foreground" />
                 <MemberDot member={memberOf(group, t.to)} size="sm" />
                 <span className="font-medium">{memberName(group, t.to)}</span>
-                <Money amountMinor={t.amount_minor} group={group} tone="plain" className="ml-auto font-semibold" />
+                <Money
+                  amountMinor={t.amount_minor}
+                  group={group}
+                  tone="plain"
+                  className="ml-auto font-semibold"
+                />
                 <Button
                   size="sm"
                   variant="ghost"
-                  onClick={() => openSettle({ from: t.from, to: t.to, amount_minor: t.amount_minor })}
+                  onClick={() =>
+                    openSettle({ from: t.from, to: t.to, amount_minor: t.amount_minor })
+                  }
                 >
                   Mark as paid
                 </Button>
@@ -142,8 +155,8 @@ function BalancesPage() {
             ))
           )}
           <p className="pt-1 text-xs text-muted-foreground">
-            {data.transfers.length} payment{data.transfers.length === 1 ? "" : "s"} instead of everyone
-            paying everyone.
+            {data.transfers.length} payment{data.transfers.length === 1 ? "" : "s"} instead of
+            everyone paying everyone.
           </p>
         </CardContent>
       </Card>
@@ -174,7 +187,10 @@ function BreakdownDialog({ memberId, onClose }: { memberId: string | null; onClo
               <p className="text-sm text-muted-foreground">Nothing recorded yet.</p>
             ) : (
               (data ?? []).map((line, i) => (
-                <div key={i} className="flex items-center gap-3 border-b py-2 text-sm last:border-0">
+                <div
+                  key={i}
+                  className="flex items-center gap-3 border-b py-2 text-sm last:border-0"
+                >
                   <div className="min-w-0 flex-1">
                     <p className="truncate">{line.label}</p>
                     <p className="text-xs text-muted-foreground">{line.date}</p>
