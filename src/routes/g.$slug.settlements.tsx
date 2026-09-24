@@ -13,7 +13,7 @@ import { groupKeys, settlementsQuery } from "@/lib/queries";
 import { ApiError } from "@/lib/types";
 
 export const Route = createFileRoute("/g/$slug/settlements")({
-  component: SettlementsPage;
+  component: SettlementsPage,
 });
 
 function SettlementsPage() {
