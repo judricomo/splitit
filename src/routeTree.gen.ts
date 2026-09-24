@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as GSlugRouteImport } from './routes/g.$slug'
+import { Route as GSlugIndexRouteImport } from './routes/g.$slug.index'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -22,31 +23,38 @@ const GSlugRoute = GSlugRouteImport.update({
   path: '/g/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GSlugIndexRoute = GSlugIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => GSlugRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/g/$slug': typeof GSlugRoute
+  '/g/$slug': typeof GSlugRouteWithChildren
+  '/g/$slug/': typeof GSlugIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/g/$slug': typeof GSlugRoute
+  '/g/$slug': typeof GSlugIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/g/$slug': typeof GSlugRoute
+  '/g/$slug': typeof GSlugRouteWithChildren
+  '/g/$slug/': typeof GSlugIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/g/$slug'
+  fullPaths: '/' | '/g/$slug' | '/g/$slug/'
   fileRoutesByTo: FileRoutesByTo
   to: '/' | '/g/$slug'
-  id: '__root__' | '/' | '/g/$slug'
+  id: '__root__' | '/' | '/g/$slug' | '/g/$slug/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  GSlugRoute: typeof GSlugRoute
+  GSlugRoute: typeof GSlugRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -65,12 +73,29 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/g/$slug/': {
+      id: '/g/$slug/'
+      path: '/'
+      fullPath: '/g/$slug/'
+      preLoaderRoute: typeof GSlugIndexRouteImport
+      parentRoute: typeof GSlugRoute
+    }
   }
 }
 
+interface GSlugRouteChildren {
+  GSlugIndexRoute: typeof GSlugIndexRoute
+}
+
+const GSlugRouteChildren: GSlugRouteChildren = {
+  GSlugIndexRoute: GSlugIndexRoute,
+}
+
+const GSlugRouteWithChildren = GSlugRoute._addFileChildren(GSlugRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  GSlugRoute: GSlugRoute,
+  GSlugRoute: GSlugRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
