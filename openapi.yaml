@@ -1,0 +1,982 @@
+openapi: 3.0.3
+info:
+  title: SplitIt API
+  version: "1.0.0"
+  description: |
+    Contract for the backend expected by `frontend/src/lib/mock-api.ts`
+    (the SplitIt expense-splitter frontend's API client). The mock client
+    currently keeps state in memory/localStorage and simulates latency, but
+    every function is written to mirror one real HTTP call one-for-one, so
+    this document describes those calls exactly as the frontend makes them.
+
+    ## Authentication model
+    There is no login. A **group** is reached through an unguessable `slug`
+    in the URL. Every `/g/{slug}/...` route is scoped to that group.
+
+    - If the group was created with a PIN (`Group.pin_required = true`),
+      the backend must gate access to all `/g/{slug}/...` routes behind an
+      HTTP-only, Secure, SameSite=Lax session cookie (`splitit_session`)
+      scoped to that group. This cookie is issued by submitting the PIN
+      (see `POST /g/{slug}/session`, marked below as *implied* — the
+      current mock client never calls it because it does not yet perform
+      PIN verification, but the backend must support it for
+      `pin_required` groups to be meaningfully protected).
+    - If the group has no PIN, opening the link grants access to
+      `/g/{slug}/...` routes with no cookie required.
+    - Regardless of PIN, **every write is attributed to a "device
+      identity"**: a `member_id` the browser has picked via
+      `PUT /g/{slug}/session/identity`. This identity is not itself a
+      security boundary (any device can claim any member), it only labels
+      who performed the action. A write attempted with no identity chosen
+      is rejected with `409 IDENTITY_REQUIRED`.
+    - `POST /groups` is the only endpoint that needs no prior session; it
+      creates the group (and, if a PIN was supplied, the session cookie
+      for its creator).
+servers:
+  - url: /api/v1
+
+tags:
+  - name: Groups
+    description: Create and manage a group's own metadata
+  - name: Session
+    description: PIN verification and per-device "I am…" identity
+  - name: Members
+    description: Add, rename and remove group members
+  - name: Expenses
+    description: CRUD, soft delete/restore and split preview for expenses
+  - name: Settlements
+    description: Record and remove payments between members
+  - name: Balances
+    description: Net balances and suggested settling-up transfers
+
+paths:
+  /groups:
+    post:
+      tags: [Groups]
+      operationId: createGroup
+      summary: Create a group with its members and an optional PIN
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateGroupInput"
+      responses:
+        "201":
+          description: Group created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Group"
+        "422":
+          description: Validation error (e.g. a member name listed twice)
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+
+  /g/{slug}:
+    parameters:
+      - $ref: "#/components/parameters/Slug"
+    get:
+      tags: [Groups]
+      operationId: getGroup
+      summary: Group metadata, members and whether a PIN is required
+      security:
+        - groupSession: []
+        - {}
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Group"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      tags: [Groups]
+      operationId: updateGroup
+      summary: Rename the group
+      security:
+        - groupSession: []
+        - {}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Group"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /g/{slug}/session:
+    parameters:
+      - $ref: "#/components/parameters/Slug"
+    post:
+      tags: [Session]
+      operationId: verifyGroupPin
+      summary: >-
+        Submit the group PIN and receive a session cookie. Implied by
+        Group.pin_required; not yet invoked by the mock frontend client,
+        but required for the real backend to enforce access on
+        PIN-protected groups. Rate-limited to 5 attempts / 15 min / IP+group.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pin]
+              properties:
+                pin:
+                  type: string
+                  minLength: 4
+                  maxLength: 8
+      responses:
+        "204":
+          description: PIN correct; `splitit_session` cookie set
+        "401":
+          description: Incorrect PIN
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "429":
+          description: Too many attempts
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+
+  /g/{slug}/session/identity:
+    parameters:
+      - $ref: "#/components/parameters/Slug"
+    put:
+      tags: [Session]
+      operationId: setIdentity
+      summary: Set "I am…" (the member this device acts as) for this group
+      security:
+        - groupSession: []
+        - {}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [member_id]
+              properties:
+                member_id:
+                  type: string
+      responses:
+        "204":
+          description: Identity stored for this device/group
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /g/{slug}/members:
+    parameters:
+      - $ref: "#/components/parameters/Slug"
+    post:
+      tags: [Members]
+      operationId: addMember
+      summary: Add a member to the group
+      security:
+        - groupSession: []
+        - {}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                  minLength: 1
+                  maxLength: 40
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Member"
+        "409":
+          description: A member with that name already exists
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "422":
+          description: Invalid name length
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+
+  /g/{slug}/members/{memberId}:
+    parameters:
+      - $ref: "#/components/parameters/Slug"
+      - name: memberId
+        in: path
+        required: true
+        schema:
+          type: string
+    patch:
+      tags: [Members]
+      operationId: renameMember
+      summary: Rename a member
+      security:
+        - groupSession: []
+        - {}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Member"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          description: A member with that name already exists
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+    delete:
+      tags: [Members]
+      operationId: removeMember
+      summary: Remove a member (soft delete). Only allowed at a zero balance.
+      security:
+        - groupSession: []
+        - {}
+      responses:
+        "204":
+          description: Removed
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          description: Member still has an open, non-zero balance
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+
+  /g/{slug}/expenses:
+    parameters:
+      - $ref: "#/components/parameters/Slug"
+    get:
+      tags: [Expenses]
+      operationId: listExpenses
+      summary: List (non-deleted) expenses, newest first
+      security:
+        - groupSession: []
+        - {}
+      parameters:
+        - name: member
+          in: query
+          description: Filter to expenses where this member paid or owes a share
+          schema:
+            type: string
+        - name: q
+          in: query
+          description: Case-insensitive substring match on description
+          schema:
+            type: string
+        - name: from
+          in: query
+          description: Only expenses spent on or after this date (YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          description: Only expenses spent on or before this date (YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Expense"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    post:
+      tags: [Expenses]
+      operationId: createExpense
+      summary: Create an expense. Actor is taken from the device identity.
+      security:
+        - groupSession: []
+        - {}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ExpenseInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Expense"
+        "409":
+          description: No device identity chosen for this group
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "422":
+          description: Invalid description/total/payers/split
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+
+  /g/{slug}/expenses/preview-split:
+    parameters:
+      - $ref: "#/components/parameters/Slug"
+    post:
+      tags: [Expenses]
+      operationId: previewSplit
+      summary: Compute shares for a candidate expense without saving it
+      security:
+        - groupSession: []
+        - {}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [total_minor, split, payers]
+              properties:
+                total_minor:
+                  type: integer
+                split:
+                  $ref: "#/components/schemas/SplitInput"
+                payers:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/Payer"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  splits:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/SplitRow"
+        "422":
+          description: Split cannot be computed (e.g. shares/percentages invalid)
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+
+  /g/{slug}/expenses/{expenseId}:
+    parameters:
+      - $ref: "#/components/parameters/Slug"
+      - name: expenseId
+        in: path
+        required: true
+        schema:
+          type: string
+    patch:
+      tags: [Expenses]
+      operationId: updateExpense
+      summary: Edit an expense
+      security:
+        - groupSession: []
+        - {}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ExpenseInput"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Expense"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          description: Invalid description/total/payers/split
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+    delete:
+      tags: [Expenses]
+      operationId: deleteExpense
+      summary: Soft-delete an expense
+      security:
+        - groupSession: []
+        - {}
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /g/{slug}/expenses/{expenseId}/restore:
+    parameters:
+      - $ref: "#/components/parameters/Slug"
+      - name: expenseId
+        in: path
+        required: true
+        schema:
+          type: string
+    post:
+      tags: [Expenses]
+      operationId: restoreExpense
+      summary: Undo a soft delete
+      security:
+        - groupSession: []
+        - {}
+      responses:
+        "204":
+          description: Restored
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /g/{slug}/settlements:
+    parameters:
+      - $ref: "#/components/parameters/Slug"
+    get:
+      tags: [Settlements]
+      operationId: listSettlements
+      summary: List (non-deleted) settlements, most recent first
+      security:
+        - groupSession: []
+        - {}
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Settlement"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    post:
+      tags: [Settlements]
+      operationId: createSettlement
+      summary: Record a payment between two members
+      security:
+        - groupSession: []
+        - {}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SettlementInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Settlement"
+        "422":
+          description: Same from/to member, or amount not greater than 0
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+
+  /g/{slug}/settlements/{settlementId}:
+    parameters:
+      - $ref: "#/components/parameters/Slug"
+      - name: settlementId
+        in: path
+        required: true
+        schema:
+          type: string
+    delete:
+      tags: [Settlements]
+      operationId: deleteSettlement
+      summary: Soft-delete a settlement
+      security:
+        - groupSession: []
+        - {}
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /g/{slug}/balances:
+    parameters:
+      - $ref: "#/components/parameters/Slug"
+    get:
+      tags: [Balances]
+      operationId: getBalances
+      summary: Net balance per member, plus the suggested minimal transfers
+      security:
+        - groupSession: []
+        - {}
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BalancesResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /g/{slug}/balances/{memberId}:
+    parameters:
+      - $ref: "#/components/parameters/Slug"
+      - name: memberId
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      tags: [Balances]
+      operationId: getMemberBreakdown
+      summary: The line items (expenses and settlements) behind one member's balance
+      security:
+        - groupSession: []
+        - {}
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BreakdownLine"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+components:
+  parameters:
+    Slug:
+      name: slug
+      in: path
+      required: true
+      description: The group's unguessable share-link slug
+      schema:
+        type: string
+
+  responses:
+    NotFound:
+      description: The group, member, expense or settlement does not exist
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetail"
+
+  securitySchemes:
+    groupSession:
+      type: apiKey
+      in: cookie
+      name: splitit_session
+      description: >-
+        HTTP-only, Secure, SameSite=Lax cookie issued by
+        POST /g/{slug}/session. Required only for groups where
+        Group.pin_required is true; groups without a PIN accept requests
+        with no cookie.
+
+  schemas:
+    Member:
+      type: object
+      required: [id, name, color, removed_at]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        color:
+          type: string
+        removed_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    Group:
+      type: object
+      required:
+        - id
+        - slug
+        - name
+        - currency_code
+        - currency_exponent
+        - pin_required
+        - archived_at
+        - created_at
+        - members
+        - version
+      properties:
+        id:
+          type: string
+        slug:
+          type: string
+        name:
+          type: string
+        currency_code:
+          type: string
+          description: ISO 4217 currency code, e.g. COP, USD, EUR
+        currency_exponent:
+          type: integer
+          description: Number of minor-unit decimal places for currency_code
+        pin_required:
+          type: boolean
+        archived_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        members:
+          type: array
+          items:
+            $ref: "#/components/schemas/Member"
+        version:
+          type: integer
+
+    CreateGroupInput:
+      type: object
+      required: [name, currency_code, my_name, member_names]
+      properties:
+        name:
+          type: string
+        currency_code:
+          type: string
+        my_name:
+          type: string
+          description: The creator's own member name
+        member_names:
+          type: array
+          items:
+            type: string
+        pin:
+          type: string
+          nullable: true
+          minLength: 4
+          maxLength: 8
+
+    Payer:
+      type: object
+      required: [member_id, paid_minor]
+      properties:
+        member_id:
+          type: string
+        paid_minor:
+          type: integer
+
+    SplitMethod:
+      type: string
+      enum: [equal, exact, percent, shares]
+
+    ParticipantInput:
+      type: object
+      description: Only the field matching `split.method` is used.
+      required: [member_id]
+      properties:
+        member_id:
+          type: string
+        exact_minor:
+          type: integer
+          description: Used when method = exact
+        bp:
+          type: integer
+          description: Basis points (1/100 of a percent); used when method = percent
+        shares:
+          type: integer
+          description: Used when method = shares
+
+    SplitInput:
+      type: object
+      required: [method, participants]
+      properties:
+        method:
+          $ref: "#/components/schemas/SplitMethod"
+        participants:
+          type: array
+          items:
+            $ref: "#/components/schemas/ParticipantInput"
+
+    SplitRow:
+      type: object
+      required: [member_id, owed_minor, is_rounding]
+      properties:
+        member_id:
+          type: string
+        owed_minor:
+          type: integer
+        is_rounding:
+          type: boolean
+          description: True for the row that absorbed the rounding remainder
+        input_bp:
+          type: integer
+        input_shares:
+          type: integer
+        input_exact_minor:
+          type: integer
+
+    ExpenseInput:
+      type: object
+      required: [description, total_minor, spent_on, payers, split]
+      properties:
+        description:
+          type: string
+          minLength: 1
+          maxLength: 120
+        total_minor:
+          type: integer
+          minimum: 1
+        spent_on:
+          type: string
+          format: date
+        notes:
+          type: string
+          nullable: true
+        payers:
+          type: array
+          items:
+            $ref: "#/components/schemas/Payer"
+        split:
+          $ref: "#/components/schemas/SplitInput"
+
+    Expense:
+      type: object
+      required:
+        - id
+        - group_id
+        - description
+        - total_minor
+        - spent_on
+        - notes
+        - split_method
+        - payers
+        - splits
+        - created_by_member_id
+        - created_at
+        - deleted_at
+        - version
+      properties:
+        id:
+          type: string
+        group_id:
+          type: string
+        description:
+          type: string
+        total_minor:
+          type: integer
+        spent_on:
+          type: string
+          format: date
+        notes:
+          type: string
+          nullable: true
+        split_method:
+          $ref: "#/components/schemas/SplitMethod"
+        payers:
+          type: array
+          items:
+            $ref: "#/components/schemas/Payer"
+        splits:
+          type: array
+          items:
+            $ref: "#/components/schemas/SplitRow"
+        created_by_member_id:
+          type: string
+          description: The device identity's member_id at creation time
+        created_at:
+          type: string
+          format: date-time
+        deleted_at:
+          type: string
+          format: date-time
+          nullable: true
+        version:
+          type: integer
+
+    SettlementInput:
+      type: object
+      required: [from_member_id, to_member_id, amount_minor, settled_on]
+      properties:
+        from_member_id:
+          type: string
+        to_member_id:
+          type: string
+        amount_minor:
+          type: integer
+          minimum: 1
+        settled_on:
+          type: string
+          format: date
+        note:
+          type: string
+          nullable: true
+
+    Settlement:
+      type: object
+      required:
+        - id
+        - group_id
+        - from_member_id
+        - to_member_id
+        - amount_minor
+        - settled_on
+        - note
+        - created_at
+        - deleted_at
+        - version
+      properties:
+        id:
+          type: string
+        group_id:
+          type: string
+        from_member_id:
+          type: string
+        to_member_id:
+          type: string
+        amount_minor:
+          type: integer
+        settled_on:
+          type: string
+          format: date
+        note:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        deleted_at:
+          type: string
+          format: date-time
+          nullable: true
+        version:
+          type: integer
+
+    BalanceRow:
+      type: object
+      required: [member_id, paid, owed, sent, received, balance]
+      properties:
+        member_id:
+          type: string
+        paid:
+          type: integer
+        owed:
+          type: integer
+        sent:
+          type: integer
+        received:
+          type: integer
+        balance:
+          type: integer
+          description: paid - owed - sent + received (positive = is owed money)
+
+    Transfer:
+      type: object
+      required: [from, to, amount_minor]
+      properties:
+        from:
+          type: string
+        to:
+          type: string
+        amount_minor:
+          type: integer
+
+    BalancesResponse:
+      type: object
+      required: [members, transfers, computed_at]
+      properties:
+        members:
+          type: array
+          items:
+            $ref: "#/components/schemas/BalanceRow"
+        transfers:
+          type: array
+          items:
+            $ref: "#/components/schemas/Transfer"
+          description: A minimal set of payments that would zero every balance
+        computed_at:
+          type: string
+          format: date-time
+
+    BreakdownLine:
+      type: object
+      required: [kind, label, date, amount_minor]
+      properties:
+        kind:
+          type: string
+          enum: [expense_paid, expense_owed, settlement_sent, settlement_received]
+        label:
+          type: string
+        date:
+          type: string
+          format: date
+        amount_minor:
+          type: integer
+          description: Positive = increases the member's balance, negative = decreases it
+
+    ProblemDetail:
+      type: object
+      description: RFC 9457-style problem+json, matching lib/types.ts ApiError
+      required: [status, code, title]
+      properties:
+        status:
+          type: integer
+        code:
+          type: string
+          description: >-
+            Stable machine-readable code, e.g. GROUP_NOT_FOUND,
+            DUPLICATE_MEMBER, MEMBER_NOT_FOUND, BALANCE_NOT_ZERO,
+            INVALID_NAME, INVALID_DESCRIPTION, INVALID_TOTAL,
+            PAYERS_MISMATCH, INVALID_SPLIT, IDENTITY_REQUIRED,
+            EXPENSE_NOT_FOUND, SETTLEMENT_NOT_FOUND, SAME_MEMBER,
+            INVALID_AMOUNT
+        title:
+          type: string
+          description: Human-readable message, safe to show to the user
