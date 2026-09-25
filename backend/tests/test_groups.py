@@ -76,3 +76,52 @@ def test_get_pinned_group_without_session_cookie_is_rejected(client, pinned_grou
     resp = client.get(f"/api/v1/g/{pinned_group['slug']}")
     assert resp.status_code == 401
     assert resp.json()["code"] == "PIN_REQUIRED"
+
+
+def test_patch_group_sets_pin(client, group):
+    resp = client.patch(f"/api/v1/g/{group['slug']}", json={"pin": "4321"})
+    assert resp.status_code == 200
+    assert resp.json()["pin_required"] is True
+
+    # A device without the new session cookie is now locked out.
+    client.cookies.clear()
+    resp = client.get(f"/api/v1/g/{group['slug']}")
+    assert resp.status_code == 401
+    assert resp.json()["code"] == "PIN_REQUIRED"
+
+    # ...but the right PIN unlocks it.
+    resp = client.post(f"/api/v1/g/{group['slug']}/session", json={"pin": "4321"})
+    assert resp.status_code == 204
+    resp = client.get(f"/api/v1/g/{group['slug']}")
+    assert resp.status_code == 200
+
+
+def test_patch_group_rejects_invalid_pin(client, group):
+    resp = client.patch(f"/api/v1/g/{group['slug']}", json={"pin": "12"})
+    assert resp.status_code == 422
+    assert resp.json()["code"] == "INVALID_PIN"
+
+
+def test_patch_group_changes_existing_pin(client, pinned_group):
+    resp = client.patch(f"/api/v1/g/{pinned_group['slug']}", json={"pin": "9999"})
+    assert resp.status_code == 200
+    assert resp.json()["pin_required"] is True
+
+    # Old PIN no longer works from a fresh device (no session cookie).
+    client.cookies.clear()
+    resp = client.post(f"/api/v1/g/{pinned_group['slug']}/session", json={"pin": "1234"})
+    assert resp.status_code == 401
+    assert resp.json()["code"] == "INVALID_PIN"
+
+    resp = client.post(f"/api/v1/g/{pinned_group['slug']}/session", json={"pin": "9999"})
+    assert resp.status_code == 204
+
+
+def test_patch_group_removes_pin(client, pinned_group):
+    resp = client.patch(f"/api/v1/g/{pinned_group['slug']}", json={"remove_pin": True})
+    assert resp.status_code == 200
+    assert resp.json()["pin_required"] is False
+
+    client.cookies.clear()
+    resp = client.get(f"/api/v1/g/{pinned_group['slug']}")
+    assert resp.status_code == 200

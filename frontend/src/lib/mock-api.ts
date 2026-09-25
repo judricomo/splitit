@@ -155,7 +155,10 @@ export async function getGroup(slug: string): Promise<Group> {
 }
 
 /** PATCH /g/{slug} */
-export async function updateGroup(slug: string, patch: { name?: string }): Promise<Group> {
+export async function updateGroup(
+  slug: string,
+  patch: { name?: string; pin?: string; remove_pin?: boolean },
+): Promise<Group> {
   const group = await request<Group>("PATCH", `/g/${slug}`, patch);
   rememberGroup(group);
   return group;

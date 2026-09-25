@@ -98,7 +98,7 @@ paths:
     patch:
       tags: [Groups]
       operationId: updateGroup
-      summary: Rename the group
+      summary: Rename the group, or set/change/remove its PIN
       security:
         - groupSession: []
         - {}
@@ -111,6 +111,17 @@ paths:
               properties:
                 name:
                   type: string
+                pin:
+                  type: string
+                  nullable: true
+                  description: >-
+                    4-8 digits. Setting this sets/changes the PIN and marks
+                    the group `pin_required = true`. Ignored if
+                    `remove_pin` is true.
+                remove_pin:
+                  type: boolean
+                  default: false
+                  description: Removes the PIN, marking the group `pin_required = false`.
       responses:
         "200":
           description: Updated
@@ -120,6 +131,12 @@ paths:
                 $ref: "#/components/schemas/Group"
         "404":
           $ref: "#/components/responses/NotFound"
+        "422":
+          description: Invalid PIN (must be 4-8 digits)
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
 
   /g/{slug}/session:
     parameters:

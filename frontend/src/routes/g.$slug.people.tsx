@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { Check, Pencil, Plus, UserMinus, X } from "lucide-react";
+import { Check, Lock, LockOpen, Pencil, Plus, UserMinus, X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -24,6 +24,8 @@ function PeoplePage() {
   const [newName, setNewName] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
+  const [pinEditing, setPinEditing] = useState(false);
+  const [pinValue, setPinValue] = useState("");
 
   const invalidate = () =>
     groupKeys(slug).forEach((key) => void qc.invalidateQueries({ queryKey: key }));
@@ -59,11 +61,99 @@ function PeoplePage() {
     onError,
   });
 
+  const setPin = useMutation({
+    mutationFn: async (pin: string) => {
+      await api.updateGroup(slug, { pin });
+      // Make sure this browser doesn't get locked out of its own group —
+      // set/change the session cookie for the new PIN right away.
+      await api.verifyPin(slug, pin);
+    },
+    onSuccess: () => {
+      setPinEditing(false);
+      setPinValue("");
+      invalidate();
+      toast.success(group.pin_required ? "PIN updated" : "PIN set");
+    },
+    onError,
+  });
+
+  const removePin = useMutation({
+    mutationFn: () => api.updateGroup(slug, { remove_pin: true }),
+    onSuccess: () => {
+      invalidate();
+      toast.success("PIN removed");
+    },
+    onError,
+  });
+
   const active = group.members.filter((m) => !m.removed_at);
   const removed = group.members.filter((m) => m.removed_at);
 
   return (
     <div className="grid gap-5">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            {group.pin_required ? <Lock className="size-4" /> : <LockOpen className="size-4" />}
+            Group PIN
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-3">
+          <p className="text-sm text-muted-foreground">
+            {group.pin_required
+              ? "This group is protected. Anyone opening the link needs the PIN once per device."
+              : "No PIN set — anyone with the link can open this group."}
+          </p>
+          {pinEditing ? (
+            <div className="flex gap-2">
+              <Input
+                autoFocus
+                inputMode="numeric"
+                placeholder="4-8 digit PIN"
+                maxLength={8}
+                className="max-w-40"
+                value={pinValue}
+                onChange={(e) => setPinValue(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && pinValue.trim()) setPin.mutate(pinValue.trim());
+                }}
+              />
+              <Button
+                disabled={!pinValue.trim() || setPin.isPending}
+                onClick={() => setPin.mutate(pinValue.trim())}
+              >
+                Save
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setPinEditing(false);
+                  setPinValue("");
+                }}
+              >
+                Cancel
+              </Button>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <Button size="sm" variant="secondary" onClick={() => setPinEditing(true)}>
+                {group.pin_required ? "Change PIN" : "Set a PIN"}
+              </Button>
+              {group.pin_required ? (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  disabled={removePin.isPending}
+                  onClick={() => removePin.mutate()}
+                >
+                  Remove PIN
+                </Button>
+              ) : null}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle className="text-base">People in this group</CardTitle>

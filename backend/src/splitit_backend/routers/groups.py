@@ -58,5 +58,14 @@ def update_group(slug: str, patch: UpdateGroupInput, request: Request) -> Group:
     group = require_group_access(slug, request)
     if patch.name and patch.name.strip():
         group.name = patch.name.strip()
+    if patch.remove_pin:
+        store.pin_hashes.pop(slug, None)
+        group.pin_required = False
+    elif patch.pin is not None:
+        pin = patch.pin.strip()
+        if not (pin.isdigit() and 4 <= len(pin) <= 8):
+            raise ApiError(422, "INVALID_PIN", "The PIN must be 4-8 digits.")
+        store.pin_hashes[slug] = _hash_pin(pin)
+        group.pin_required = True
     group.version += 1
     return group

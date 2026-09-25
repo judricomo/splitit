@@ -42,6 +42,8 @@ class CreateGroupInput(BaseModel):
 
 class UpdateGroupInput(BaseModel):
     name: str | None = None
+    pin: str | None = None
+    remove_pin: bool = False
 
 
 class AddMemberInput(BaseModel):
