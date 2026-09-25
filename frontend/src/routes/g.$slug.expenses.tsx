@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { MemberDot, Money, memberName, memberOf } from "@/components/member-bits";
@@ -16,23 +17,24 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { translateApiError } from "@/lib/api-errors";
 import { useGroupContext } from "@/lib/group-context";
 import * as api from "@/lib/mock-api";
 import { expensesQuery, groupKeys } from "@/lib/queries";
-import { ApiError } from "@/lib/types";
 
 export const Route = createFileRoute("/g/$slug/expenses")({
   component: ExpensesPage,
 });
 
-const METHOD_LABEL: Record<string, string> = {
-  equal: "Equally",
-  exact: "Exact amounts",
-  percent: "Percentages",
-  shares: "Shares",
+const METHOD_KEY: Record<string, string> = {
+  equal: "expenses.method.equal",
+  exact: "expenses.method.exact",
+  percent: "expenses.method.percent",
+  shares: "expenses.method.shares",
 };
 
 function ExpensesPage() {
+  const { t } = useTranslation();
   const { slug, group, openExpense } = useGroupContext();
   const qc = useQueryClient();
   const [q, setQ] = useState("");
@@ -48,17 +50,16 @@ function ExpensesPage() {
     mutationFn: (id: string) => api.deleteExpense(slug, id),
     onSuccess: (_result, id) => {
       invalidate();
-      toast("Expense deleted", {
+      toast(t("expenses.deletedToast"), {
         action: {
-          label: "Undo",
+          label: t("common.undo"),
           onClick: () => {
             void api.restoreExpense(slug, id).then(invalidate);
           },
         },
       });
     },
-    onError: (error) =>
-      toast.error(error instanceof ApiError ? error.message : "Could not delete that expense."),
+    onError: (error) => toast.error(translateApiError(t, error)),
   });
 
   return (
@@ -68,7 +69,7 @@ function ExpensesPage() {
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             className="pl-9"
-            placeholder="Search expenses"
+            placeholder={t("expenses.searchPlaceholder")}
             value={q}
             onChange={(e) => setQ(e.target.value)}
           />
@@ -78,7 +79,7 @@ function ExpensesPage() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Everyone</SelectItem>
+            <SelectItem value="all">{t("expenses.everyone")}</SelectItem>
             {group.members
               .filter((m) => !m.removed_at)
               .map((m) => (
@@ -90,7 +91,7 @@ function ExpensesPage() {
         </Select>
         <Button onClick={() => openExpense()}>
           <Plus className="size-4" />
-          New expense
+          {t("expenses.newExpense")}
         </Button>
       </div>
 
@@ -102,13 +103,11 @@ function ExpensesPage() {
       ) : (data ?? []).length === 0 ? (
         <Card>
           <CardContent className="grid gap-3 py-12 text-center">
-            <p className="font-medium">No expenses here yet</p>
-            <p className="text-sm text-muted-foreground">
-              Add the first one and balances update straight away.
-            </p>
+            <p className="font-medium">{t("expenses.empty.title")}</p>
+            <p className="text-sm text-muted-foreground">{t("expenses.empty.description")}</p>
             <Button className="justify-self-center" onClick={() => openExpense()}>
               <Plus className="size-4" />
-              Add an expense
+              {t("expenses.empty.cta")}
             </Button>
           </CardContent>
         </Card>
@@ -121,8 +120,11 @@ function ExpensesPage() {
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-medium">{e.description}</p>
                     <p className="text-xs text-muted-foreground">
-                      {e.spent_on} · {METHOD_LABEL[e.split_method]} ·{" "}
-                      {e.payers.map((p) => memberName(group, p.member_id)).join(" + ")} paid
+                      {t("expenses.card.meta", {
+                        date: e.spent_on,
+                        method: t(METHOD_KEY[e.split_method] ?? "expenses.method.equal"),
+                        payers: e.payers.map((p) => memberName(group, p.member_id)).join(" + "),
+                      })}
                     </p>
                   </div>
                   <Money
@@ -135,7 +137,7 @@ function ExpensesPage() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      aria-label="Edit expense"
+                      aria-label={t("expenses.editAria")}
                       onClick={() => openExpense(e.id)}
                     >
                       <Pencil className="size-4" />
@@ -143,7 +145,7 @@ function ExpensesPage() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      aria-label="Delete expense"
+                      aria-label={t("expenses.deleteAria")}
                       onClick={() => remove.mutate(e.id)}
                     >
                       <Trash2 className="size-4" />

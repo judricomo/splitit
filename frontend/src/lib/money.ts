@@ -23,14 +23,25 @@ export function exponentFor(code: string): number {
   return EXPONENTS[code.toUpperCase()] ?? 2;
 }
 
+/** Maps an app language (e.g. "en"/"es") to an Intl locale used purely for display formatting. */
+const DISPLAY_LOCALES: Record<string, string> = {
+  en: "en-US",
+  es: "es-CO",
+};
+
 export function formatMinor(
   amountMinor: number,
   currency: string,
   exponent: number,
-  opts: { signed?: boolean | undefined; abs?: boolean | undefined } = {},
+  opts: {
+    signed?: boolean | undefined;
+    abs?: boolean | undefined;
+    locale?: string | undefined;
+  } = {},
 ): string {
   const value = (opts.abs ? Math.abs(amountMinor) : amountMinor) / 10 ** exponent;
-  const formatted = new Intl.NumberFormat("en-US", {
+  const intlLocale = (opts.locale && DISPLAY_LOCALES[opts.locale]) || opts.locale || "en-US";
+  const formatted = new Intl.NumberFormat(intlLocale, {
     style: "currency",
     currency,
     minimumFractionDigits: exponent,

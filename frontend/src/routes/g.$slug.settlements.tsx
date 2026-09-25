@@ -1,22 +1,24 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { ArrowRight, HandCoins, Trash2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { MemberDot, Money, memberName, memberOf } from "@/components/member-bits";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { translateApiError } from "@/lib/api-errors";
 import { useGroupContext } from "@/lib/group-context";
 import * as api from "@/lib/mock-api";
 import { groupKeys, settlementsQuery } from "@/lib/queries";
-import { ApiError } from "@/lib/types";
 
 export const Route = createFileRoute("/g/$slug/settlements")({
   component: SettlementsPage,
 });
 
 function SettlementsPage() {
+  const { t } = useTranslation();
   const { slug, group, openSettle } = useGroupContext();
   const qc = useQueryClient();
   const { data, isPending } = useQuery(settlementsQuery(slug));
@@ -25,24 +27,21 @@ function SettlementsPage() {
     mutationFn: (id: string) => api.deleteSettlement(slug, id),
     onSuccess: () => {
       groupKeys(slug).forEach((key) => void qc.invalidateQueries({ queryKey: key }));
-      toast.success("Payment removed");
+      toast.success(t("settlements.removedToast"));
     },
-    onError: (error) =>
-      toast.error(error instanceof ApiError ? error.message : "Could not remove that payment."),
+    onError: (error) => toast.error(translateApiError(t, error)),
   });
 
   return (
     <div className="grid gap-5">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h2 className="text-lg font-semibold">Payments between people</h2>
-          <p className="text-sm text-muted-foreground">
-            Recorded here, paid however you like — cash, transfer, anything.
-          </p>
+          <h2 className="text-lg font-semibold">{t("settlements.title")}</h2>
+          <p className="text-sm text-muted-foreground">{t("settlements.subtitle")}</p>
         </div>
         <Button onClick={() => openSettle()}>
           <HandCoins className="size-4" />
-          Record
+          {t("settlements.recordButton")}
         </Button>
       </div>
 
@@ -51,9 +50,9 @@ function SettlementsPage() {
       ) : (data ?? []).length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
-            <p className="font-medium">No payments yet</p>
+            <p className="font-medium">{t("settlements.empty.title")}</p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Use "Mark as paid" on the balances tab to log one in a tap.
+              {t("settlements.empty.description")}
             </p>
           </CardContent>
         </Card>
@@ -80,7 +79,7 @@ function SettlementsPage() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  aria-label="Remove payment"
+                  aria-label={t("settlements.removeAria")}
                   onClick={() => remove.mutate(s.id)}
                 >
                   <Trash2 className="size-4" />

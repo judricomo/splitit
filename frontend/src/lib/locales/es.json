@@ -1,0 +1,249 @@
+{
+  "common": {
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "saving": "Guardando…",
+    "saveChanges": "Guardar cambios",
+    "creating": "Creando…",
+    "checking": "Verificando…",
+    "add": "Agregar",
+    "undo": "Deshacer",
+    "unknown": "Desconocido",
+    "date": "Fecha",
+    "notesLabel": "Notas (opcional)",
+    "genericError": "Algo salió mal. Intenta de nuevo.",
+    "goHome": "Ir al inicio",
+    "tryAgain": "Intentar de nuevo"
+  },
+  "notFound": {
+    "title": "Página no encontrada",
+    "description": "La página que buscas no existe o fue movida."
+  },
+  "errorPage": {
+    "title": "Esta página no cargó",
+    "description": "Algo salió mal de nuestro lado. Puedes actualizar la página o volver al inicio."
+  },
+  "home": {
+    "eyebrow": "Sin cuentas. Solo un enlace.",
+    "headline": "Gastos compartidos, saldados con la menor cantidad de pagos.",
+    "subhead": "Registra lo que pagó cada quien, repártelo en partes iguales, por montos exactos, porcentajes o partes, y SplitIt calcula exactamente quién le debe a quién.",
+    "features": {
+      "split": { "title": "Cuatro formas de dividir", "text": "Igual, exacto, porcentaje o partes." },
+      "payers": { "title": "Varios pagadores", "text": "Una cuenta, varias billeteras." },
+      "balanced": { "title": "Siempre cuadrado", "text": "Hasta el último centavo." }
+    },
+    "demoLink": "Abrir el grupo de ejemplo",
+    "recentGroupsHeading": "Grupos en este dispositivo",
+    "toastCreated": "Grupo creado",
+    "toastCreateError": "No se pudo crear el grupo.",
+    "form": {
+      "heading": "Crear un grupo",
+      "subheading": "Obtienes un enlace secreto para compartir con todos.",
+      "groupNameLabel": "Nombre del grupo",
+      "groupNamePlaceholder": "Viaje a Cartagena",
+      "currencyLabel": "Moneda",
+      "pinLabel": "PIN (opcional)",
+      "pinPlaceholder": "4 a 8 dígitos",
+      "yourNameLabel": "Tu nombre",
+      "yourNamePlaceholder": "Juan",
+      "othersLabel": "Otras personas",
+      "personPlaceholder": "Persona {{n}}",
+      "removePerson": "Quitar persona",
+      "addAnother": "Agregar otra",
+      "submit": "Crear grupo",
+      "hint": "Puedes agregar o renombrar personas en cualquier momento."
+    }
+  },
+  "group": {
+    "notFound": {
+      "title": "Este enlace no es válido",
+      "description": "Pídele a quien te invitó que te reenvíe el enlace del grupo.",
+      "cta": "Ir a SplitIt"
+    },
+    "header": {
+      "peopleCount_one": "{{count}} persona · {{currency}}",
+      "peopleCount_other": "{{count}} personas · {{currency}}",
+      "shareLink": "Compartir enlace",
+      "copiedToast": "Enlace copiado",
+      "copyErrorToast": "No se pudo copiar el enlace.",
+      "iAmPlaceholder": "Soy…",
+      "switchWho": "Cambiar quién eres",
+      "expenseButton": "Gasto"
+    },
+    "tabs": {
+      "balances": "Balances",
+      "expenses": "Gastos",
+      "payments": "Pagos",
+      "people": "Personas"
+    },
+    "identity": {
+      "title": "¿Quién eres?",
+      "description": "Este dispositivo recordará tu elección y etiquetará todo lo que agregues."
+    },
+    "pin": {
+      "title": "Ingresa el PIN del grupo",
+      "description": "Este grupo está protegido. Pídele el PIN a quien te invitó.",
+      "placeholder": "PIN",
+      "submit": "Continuar"
+    }
+  },
+  "balances": {
+    "yourPart": {
+      "title": "Tu parte",
+      "allSettled": "Estás a mano con todos. No hay nada que pagar ni cobrar."
+    },
+    "youOwe": "Le debes a {{name}}",
+    "owesYou": "{{name}} te debe",
+    "markAsPaid": "Marcar como pagado",
+    "standings": { "title": "Cómo está cada quien" },
+    "status": { "getsBack": "recibe", "owes": "debe", "settledUp": "en paz" },
+    "shortest": {
+      "title": "La forma más corta de saldar cuentas",
+      "allSettled": "Nadie le debe a nadie. Agrega un gasto para comenzar.",
+      "count_one": "{{count}} pago en lugar de que todos se paguen entre sí.",
+      "count_other": "{{count}} pagos en lugar de que todos se paguen entre sí."
+    },
+    "breakdown": {
+      "title": "Historial de {{name}}",
+      "empty": "Nada registrado todavía.",
+      "expensePaid": "Pagó \"{{description}}\"",
+      "expenseOwed": "Su parte de \"{{description}}\"",
+      "settlementSent": "Le pagó a {{name}}",
+      "settlementReceived": "Recibió de {{name}}"
+    }
+  },
+  "expenses": {
+    "method": {
+      "equal": "Partes iguales",
+      "exact": "Montos exactos",
+      "percent": "Porcentajes",
+      "shares": "Partes"
+    },
+    "searchPlaceholder": "Buscar gastos",
+    "everyone": "Todos",
+    "newExpense": "Nuevo gasto",
+    "empty": {
+      "title": "Todavía no hay gastos",
+      "description": "Agrega el primero y los balances se actualizan al instante.",
+      "cta": "Agregar un gasto"
+    },
+    "card": { "meta": "{{date}} · {{method}} · pagó {{payers}}" },
+    "editAria": "Editar gasto",
+    "deleteAria": "Eliminar gasto",
+    "deletedToast": "Gasto eliminado",
+    "deleteErrorToast": "No se pudo eliminar ese gasto."
+  },
+  "settlements": {
+    "title": "Pagos entre personas",
+    "subtitle": "Se registran aquí, pagados como prefieras: efectivo, transferencia, lo que sea.",
+    "recordButton": "Registrar",
+    "empty": {
+      "title": "Todavía no hay pagos",
+      "description": "Usa \"Marcar como pagado\" en la pestaña de balances para registrar uno al toque."
+    },
+    "removeAria": "Quitar pago",
+    "removedToast": "Pago eliminado",
+    "removeErrorToast": "No se pudo eliminar ese pago."
+  },
+  "people": {
+    "title": "Personas en este grupo",
+    "thatsYou": "eres tú",
+    "iAmButton": "Soy {{name}}",
+    "renameAria": "Renombrar",
+    "removeAria": "Quitar",
+    "addPlaceholder": "Agregar a alguien",
+    "removeHint": "Solo se puede quitar a alguien cuando su balance está en cero. Sus gastos anteriores se conservan.",
+    "removedHeading": "Ya no están en el grupo",
+    "addedToast": "Persona agregada",
+    "renamedToast": "Nombre actualizado",
+    "removedToast": "Persona eliminada",
+    "pin": {
+      "title": "PIN del grupo",
+      "onDescription": "Este grupo está protegido. Cualquiera que abra el enlace necesita el PIN una vez por dispositivo.",
+      "offDescription": "No hay PIN configurado — cualquiera con el enlace puede abrir este grupo.",
+      "placeholder": "PIN de 4 a 8 dígitos",
+      "changeButton": "Cambiar PIN",
+      "setButton": "Configurar un PIN",
+      "removeButton": "Quitar PIN",
+      "updatedToast": "PIN actualizado",
+      "setToast": "PIN configurado",
+      "removedToast": "PIN eliminado"
+    }
+  },
+  "expenseDialog": {
+    "methodHint": {
+      "equal": "Se divide en partes iguales entre los seleccionados.",
+      "exact": "Escribe el monto exacto de cada persona.",
+      "percent": "Los porcentajes deben sumar 100%.",
+      "shares": "Pesos relativos, p. ej. 2:1:1 para un cuarto más grande."
+    },
+    "editTitle": "Editar gasto",
+    "newTitle": "Nuevo gasto",
+    "description": "Los montos están en {{currency}}. Cualquiera en el grupo puede editar esto después.",
+    "descriptionLabel": "¿En qué fue?",
+    "descriptionPlaceholder": "Cena en La Cevichería",
+    "totalLabel": "Total",
+    "whoPaid": {
+      "title": "¿Quién pagó?",
+      "multiHint": "Los montos deben sumar el total.",
+      "singleHint": "Una persona lo cubrió todo.",
+      "togglePayers": "Varios pagadores"
+    },
+    "splitTitle": "¿Cómo se divide?",
+    "includeAria": "Incluir a {{name}}",
+    "percentAssigned": "100% asignado",
+    "percentLeft": "{{pct}}% por asignar",
+    "percentOver": "{{pct}}% de más",
+    "fullyAssigned": "Totalmente asignado",
+    "remainingToAssign": "Falta por asignar",
+    "leftoverHint": "Los centavos sobrantes van para quien pagó más.",
+    "notesPlaceholder": "Algo que valga la pena recordar",
+    "addExpense": "Agregar gasto",
+    "updatedToast": "Gasto actualizado",
+    "addedToast": "Gasto agregado",
+    "errors": {
+      "TOTAL_NOT_POSITIVE": "El total debe ser mayor a 0",
+      "NO_PARTICIPANTS": "Elige al menos un participante",
+      "EXACT_MISMATCH": "Los montos exactos deben sumar el total",
+      "PERCENT_MISMATCH": "Los porcentajes deben sumar 100.00%",
+      "SHARES_INVALID": "El total de partes debe ser al menos 1",
+      "NO_PAYERS": "Agrega al menos un pagador",
+      "PAYERS_MISMATCH": "Los montos pagados deben sumar el total",
+      "ENTER_AMOUNT": "Ingresa un monto"
+    }
+  },
+  "settleDialog": {
+    "title": "Registrar un pago",
+    "description": "Esto solo lo deja anotado — no se mueve dinero a través de la app.",
+    "whoPaidLabel": "Quién pagó",
+    "whoReceivedLabel": "Quién lo recibió",
+    "pickPersonPlaceholder": "Elige a una persona",
+    "amountLabel": "Monto ({{currency}})",
+    "noteLabel": "Nota (opcional)",
+    "notePlaceholder": "Efectivo, transferencia, …",
+    "submit": "Registrar pago",
+    "recordedToast": "Pago registrado"
+  },
+  "errors": {
+    "apiCodes": {
+      "GROUP_NOT_FOUND": "Este enlace de grupo no es válido.",
+      "DUPLICATE_MEMBER": "Ese nombre ya está en este grupo.",
+      "INVALID_NAME": "Un nombre debe tener entre 1 y 40 caracteres.",
+      "MEMBER_NOT_FOUND": "Esa persona ya no existe.",
+      "BALANCE_NOT_ZERO": "Esta persona todavía tiene un balance pendiente. Salda cuentas primero.",
+      "INVALID_DESCRIPTION": "La descripción debe tener entre 1 y 120 caracteres.",
+      "INVALID_TOTAL": "El total debe ser mayor a 0.",
+      "PAYERS_MISMATCH": "Los montos pagados deben sumar el total.",
+      "INVALID_SPLIT": "Esa división no cuadra. Revisa los montos.",
+      "EXPENSE_NOT_FOUND": "Ese gasto ya no existe.",
+      "SAME_MEMBER": "Elige a dos personas diferentes.",
+      "INVALID_AMOUNT": "El monto debe ser mayor a 0.",
+      "SETTLEMENT_NOT_FOUND": "Ese pago ya no existe.",
+      "IDENTITY_REQUIRED": "Primero elige quién eres.",
+      "PIN_REQUIRED": "Ingresa el PIN del grupo para continuar.",
+      "INVALID_PIN": "Ese PIN no es válido.",
+      "TOO_MANY_ATTEMPTS": "Demasiados intentos. Intenta de nuevo en 15 minutos.",
+      "NETWORK_ERROR": "No se pudo conectar con el servidor. ¿Está corriendo el backend?"
+    }
+  }
+}

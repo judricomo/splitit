@@ -2,22 +2,24 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { Check, Lock, LockOpen, Pencil, Plus, UserMinus, X } from "lucide-react";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { MemberDot, Money } from "@/components/member-bits";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { translateApiError } from "@/lib/api-errors";
 import { useGroupContext } from "@/lib/group-context";
 import * as api from "@/lib/mock-api";
 import { balancesQuery, groupKeys } from "@/lib/queries";
-import { ApiError } from "@/lib/types";
 
 export const Route = createFileRoute("/g/$slug/people")({
   component: PeoplePage,
 });
 
 function PeoplePage() {
+  const { t } = useTranslation();
   const { slug, group, actorId, setActor } = useGroupContext();
   const qc = useQueryClient();
   const { data: balances } = useQuery(balancesQuery(slug));
@@ -29,15 +31,14 @@ function PeoplePage() {
 
   const invalidate = () =>
     groupKeys(slug).forEach((key) => void qc.invalidateQueries({ queryKey: key }));
-  const onError = (error: unknown) =>
-    toast.error(error instanceof ApiError ? error.message : "Something went wrong. Try again.");
+  const onError = (error: unknown) => toast.error(translateApiError(t, error));
 
   const add = useMutation({
     mutationFn: () => api.addMember(slug, newName),
     onSuccess: () => {
       setNewName("");
       invalidate();
-      toast.success("Person added");
+      toast.success(t("people.addedToast"));
     },
     onError,
   });
@@ -47,7 +48,7 @@ function PeoplePage() {
     onSuccess: () => {
       setEditingId(null);
       invalidate();
-      toast.success("Name updated");
+      toast.success(t("people.renamedToast"));
     },
     onError,
   });
@@ -56,7 +57,7 @@ function PeoplePage() {
     mutationFn: (id: string) => api.removeMember(slug, id),
     onSuccess: () => {
       invalidate();
-      toast.success("Person removed");
+      toast.success(t("people.removedToast"));
     },
     onError,
   });
@@ -72,7 +73,7 @@ function PeoplePage() {
       setPinEditing(false);
       setPinValue("");
       invalidate();
-      toast.success(group.pin_required ? "PIN updated" : "PIN set");
+      toast.success(group.pin_required ? t("people.pin.updatedToast") : t("people.pin.setToast"));
     },
     onError,
   });
@@ -81,7 +82,7 @@ function PeoplePage() {
     mutationFn: () => api.updateGroup(slug, { remove_pin: true }),
     onSuccess: () => {
       invalidate();
-      toast.success("PIN removed");
+      toast.success(t("people.pin.removedToast"));
     },
     onError,
   });
@@ -95,21 +96,19 @@ function PeoplePage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             {group.pin_required ? <Lock className="size-4" /> : <LockOpen className="size-4" />}
-            Group PIN
+            {t("people.pin.title")}
           </CardTitle>
         </CardHeader>
         <CardContent className="grid gap-3">
           <p className="text-sm text-muted-foreground">
-            {group.pin_required
-              ? "This group is protected. Anyone opening the link needs the PIN once per device."
-              : "No PIN set — anyone with the link can open this group."}
+            {group.pin_required ? t("people.pin.onDescription") : t("people.pin.offDescription")}
           </p>
           {pinEditing ? (
             <div className="flex gap-2">
               <Input
                 autoFocus
                 inputMode="numeric"
-                placeholder="4-8 digit PIN"
+                placeholder={t("people.pin.placeholder")}
                 maxLength={8}
                 className="max-w-40"
                 value={pinValue}
@@ -122,7 +121,7 @@ function PeoplePage() {
                 disabled={!pinValue.trim() || setPin.isPending}
                 onClick={() => setPin.mutate(pinValue.trim())}
               >
-                Save
+                {t("common.save")}
               </Button>
               <Button
                 variant="ghost"
@@ -131,13 +130,13 @@ function PeoplePage() {
                   setPinValue("");
                 }}
               >
-                Cancel
+                {t("common.cancel")}
               </Button>
             </div>
           ) : (
             <div className="flex gap-2">
               <Button size="sm" variant="secondary" onClick={() => setPinEditing(true)}>
-                {group.pin_required ? "Change PIN" : "Set a PIN"}
+                {group.pin_required ? t("people.pin.changeButton") : t("people.pin.setButton")}
               </Button>
               {group.pin_required ? (
                 <Button
@@ -146,7 +145,7 @@ function PeoplePage() {
                   disabled={removePin.isPending}
                   onClick={() => removePin.mutate()}
                 >
-                  Remove PIN
+                  {t("people.pin.removeButton")}
                 </Button>
               ) : null}
             </div>
@@ -156,7 +155,7 @@ function PeoplePage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">People in this group</CardTitle>
+          <CardTitle className="text-base">{t("people.title")}</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-1">
           {active.map((m) => {
@@ -176,7 +175,7 @@ function PeoplePage() {
                     <Button
                       size="icon"
                       variant="ghost"
-                      aria-label="Save name"
+                      aria-label={t("common.save")}
                       onClick={() => rename.mutate({ id: m.id, name: editName })}
                     >
                       <Check className="size-4" />
@@ -184,7 +183,7 @@ function PeoplePage() {
                     <Button
                       size="icon"
                       variant="ghost"
-                      aria-label="Cancel"
+                      aria-label={t("common.cancel")}
                       onClick={() => setEditingId(null)}
                     >
                       <X className="size-4" />
@@ -196,11 +195,15 @@ function PeoplePage() {
                       <p className="truncate text-sm font-medium">
                         {m.name}
                         {m.id === actorId ? (
-                          <span className="ml-2 text-xs text-primary">that's you</span>
+                          <span className="ml-2 text-xs text-primary">{t("people.thatsYou")}</span>
                         ) : null}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {balance === 0 ? "settled up" : balance > 0 ? "gets back" : "owes"}{" "}
+                        {balance === 0
+                          ? t("balances.status.settledUp")
+                          : balance > 0
+                            ? t("balances.status.getsBack")
+                            : t("balances.status.owes")}{" "}
                         {balance !== 0 ? (
                           <Money amountMinor={balance} group={group} abs tone="plain" />
                         ) : null}
@@ -208,13 +211,13 @@ function PeoplePage() {
                     </div>
                     {m.id !== actorId ? (
                       <Button size="sm" variant="ghost" onClick={() => setActor(m.id)}>
-                        I am {m.name}
+                        {t("people.iAmButton", { name: m.name })}
                       </Button>
                     ) : null}
                     <Button
                       size="icon"
                       variant="ghost"
-                      aria-label="Rename"
+                      aria-label={t("people.renameAria")}
                       onClick={() => {
                         setEditingId(m.id);
                         setEditName(m.name);
@@ -225,7 +228,7 @@ function PeoplePage() {
                     <Button
                       size="icon"
                       variant="ghost"
-                      aria-label="Remove"
+                      aria-label={t("people.removeAria")}
                       onClick={() => remove.mutate(m.id)}
                     >
                       <UserMinus className="size-4" />
@@ -238,7 +241,7 @@ function PeoplePage() {
 
           <div className="mt-3 flex gap-2 border-t pt-4">
             <Input
-              placeholder="Add someone"
+              placeholder={t("people.addPlaceholder")}
               maxLength={40}
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
@@ -248,19 +251,17 @@ function PeoplePage() {
             />
             <Button disabled={!newName.trim() || add.isPending} onClick={() => add.mutate()}>
               <Plus className="size-4" />
-              Add
+              {t("common.add")}
             </Button>
           </div>
-          <p className="text-xs text-muted-foreground">
-            Someone can only be removed once their balance is zero. Their past expenses stay.
-          </p>
+          <p className="text-xs text-muted-foreground">{t("people.removeHint")}</p>
         </CardContent>
       </Card>
 
       {removed.length > 0 ? (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">No longer in the group</CardTitle>
+            <CardTitle className="text-base">{t("people.removedHeading")}</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-wrap gap-3">
             {removed.map((m) => (

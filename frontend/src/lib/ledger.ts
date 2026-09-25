@@ -30,10 +30,8 @@ export interface SplitResult {
 /** Spec §4.2 — floor each raw share, then the primary payer absorbs the remainder. */
 export function computeSplits(totalMinor: number, split: SplitInput, payers: Payer[]): SplitResult {
   const parts = split.participants;
-  if (totalMinor <= 0)
-    return { rows: [], leftover_minor: 0, error: "Total must be greater than 0" };
-  if (parts.length === 0)
-    return { rows: [], leftover_minor: 0, error: "Pick at least one participant" };
+  if (totalMinor <= 0) return { rows: [], leftover_minor: 0, error: "TOTAL_NOT_POSITIVE" };
+  if (parts.length === 0) return { rows: [], leftover_minor: 0, error: "NO_PARTICIPANTS" };
 
   const rows: SplitRow[] = [];
   let error: string | null = null;
@@ -56,7 +54,7 @@ export function computeSplits(totalMinor: number, split: SplitInput, payers: Pay
         input_exact_minor: amount,
       });
     }
-    if (sum !== totalMinor) error = "Exact amounts must add up to the total";
+    if (sum !== totalMinor) error = "EXACT_MISMATCH";
   } else if (split.method === "percent") {
     let bpSum = 0;
     for (const p of parts) {
@@ -69,11 +67,11 @@ export function computeSplits(totalMinor: number, split: SplitInput, payers: Pay
         input_bp: bp,
       });
     }
-    if (bpSum !== 10000) error = "Percentages must add up to 100.00%";
+    if (bpSum !== 10000) error = "PERCENT_MISMATCH";
   } else {
     const total = parts.reduce((acc, p) => acc + (p.shares ?? 0), 0);
     if (total <= 0) {
-      error = "Total shares must be at least 1";
+      error = "SHARES_INVALID";
     }
     for (const p of parts) {
       const s = p.shares ?? 0;
@@ -108,9 +106,9 @@ export function computeSplits(totalMinor: number, split: SplitInput, payers: Pay
 
 export function validatePayers(totalMinor: number, payers: Payer[]): string | null {
   const active = payers.filter((p) => p.paid_minor > 0);
-  if (active.length === 0) return "Add at least one payer";
+  if (active.length === 0) return "NO_PAYERS";
   const sum = active.reduce((acc, p) => acc + p.paid_minor, 0);
-  if (sum !== totalMinor) return "Paid amounts must add up to the total";
+  if (sum !== totalMinor) return "PAYERS_MISMATCH";
   return null;
 }
 

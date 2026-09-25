@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { MemberDot } from "@/components/member-bits";
@@ -21,10 +22,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { translateApiError } from "@/lib/api-errors";
 import * as api from "@/lib/mock-api";
 import { minorToInput, parseToMinor } from "@/lib/money";
 import { groupKeys } from "@/lib/queries";
-import { ApiError, type Group } from "@/lib/types";
+import type { Group } from "@/lib/types";
 
 export interface SettlePrefill {
   from: string;
@@ -46,6 +48,7 @@ export function SettleDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   const qc = useQueryClient();
+  const { t } = useTranslation();
   const exp = group.currency_exponent;
   const active = group.members.filter((m) => !m.removed_at);
 
@@ -79,29 +82,26 @@ export function SettleDialog({
       }),
     onSuccess: () => {
       groupKeys(slug).forEach((key) => void qc.invalidateQueries({ queryKey: key }));
-      toast.success("Payment recorded");
+      toast.success(t("settleDialog.recordedToast"));
       onOpenChange(false);
     },
-    onError: (error) =>
-      toast.error(error instanceof ApiError ? error.message : "Something went wrong. Try again."),
+    onError: (error) => toast.error(translateApiError(t, error)),
   });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Record a payment</DialogTitle>
-          <DialogDescription>
-            This only writes it down — no money moves through the app.
-          </DialogDescription>
+          <DialogTitle>{t("settleDialog.title")}</DialogTitle>
+          <DialogDescription>{t("settleDialog.description")}</DialogDescription>
         </DialogHeader>
 
         <div className="grid gap-4">
           <div className="grid gap-2">
-            <Label>Who paid</Label>
+            <Label>{t("settleDialog.whoPaidLabel")}</Label>
             <Select value={from} onValueChange={setFrom}>
               <SelectTrigger>
-                <SelectValue placeholder="Pick a person" />
+                <SelectValue placeholder={t("settleDialog.pickPersonPlaceholder")} />
               </SelectTrigger>
               <SelectContent>
                 {active.map((m) => (
@@ -117,10 +117,10 @@ export function SettleDialog({
           </div>
 
           <div className="grid gap-2">
-            <Label>Who received it</Label>
+            <Label>{t("settleDialog.whoReceivedLabel")}</Label>
             <Select value={to} onValueChange={setTo}>
               <SelectTrigger>
-                <SelectValue placeholder="Pick a person" />
+                <SelectValue placeholder={t("settleDialog.pickPersonPlaceholder")} />
               </SelectTrigger>
               <SelectContent>
                 {active
@@ -139,7 +139,9 @@ export function SettleDialog({
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="grid gap-2">
-              <Label htmlFor="settle-amount">Amount ({group.currency_code})</Label>
+              <Label htmlFor="settle-amount">
+                {t("settleDialog.amountLabel", { currency: group.currency_code })}
+              </Label>
               <Input
                 id="settle-amount"
                 className="money"
@@ -150,7 +152,7 @@ export function SettleDialog({
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="settle-date">Date</Label>
+              <Label htmlFor="settle-date">{t("common.date")}</Label>
               <Input
                 id="settle-date"
                 type="date"
@@ -161,11 +163,11 @@ export function SettleDialog({
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="settle-note">Note (optional)</Label>
+            <Label htmlFor="settle-note">{t("settleDialog.noteLabel")}</Label>
             <Input
               id="settle-note"
               value={note}
-              placeholder="Cash, transfer, …"
+              placeholder={t("settleDialog.notePlaceholder")}
               onChange={(e) => setNote(e.target.value)}
             />
           </div>
@@ -173,10 +175,10 @@ export function SettleDialog({
 
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t("common.cancel")}
           </Button>
           <Button disabled={!valid || mutation.isPending} onClick={() => mutation.mutate()}>
-            {mutation.isPending ? "Saving…" : "Record payment"}
+            {mutation.isPending ? t("common.saving") : t("settleDialog.submit")}
           </Button>
         </DialogFooter>
       </DialogContent>

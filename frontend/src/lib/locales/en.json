@@ -1,0 +1,249 @@
+{
+  "common": {
+    "cancel": "Cancel",
+    "save": "Save",
+    "saving": "Saving…",
+    "saveChanges": "Save changes",
+    "creating": "Creating…",
+    "checking": "Checking…",
+    "add": "Add",
+    "undo": "Undo",
+    "unknown": "Unknown",
+    "date": "Date",
+    "notesLabel": "Notes (optional)",
+    "genericError": "Something went wrong. Try again.",
+    "goHome": "Go home",
+    "tryAgain": "Try again"
+  },
+  "notFound": {
+    "title": "Page not found",
+    "description": "The page you're looking for doesn't exist or has been moved."
+  },
+  "errorPage": {
+    "title": "This page didn't load",
+    "description": "Something went wrong on our end. You can try refreshing or head back home."
+  },
+  "home": {
+    "eyebrow": "No accounts. Just a link.",
+    "headline": "Shared costs, settled in the fewest payments.",
+    "subhead": "Log what everyone paid, split it evenly, by exact amounts, percentages or shares, and SplitIt works out exactly who should pay whom.",
+    "features": {
+      "split": { "title": "Four ways to split", "text": "Equal, exact, percent or shares." },
+      "payers": { "title": "Several payers", "text": "One bill, many wallets." },
+      "balanced": { "title": "Always balanced", "text": "Down to the last cent." }
+    },
+    "demoLink": "Open the demo group",
+    "recentGroupsHeading": "Groups on this device",
+    "toastCreated": "Group created",
+    "toastCreateError": "Could not create the group.",
+    "form": {
+      "heading": "Create a group",
+      "subheading": "You get a secret link to share with everyone.",
+      "groupNameLabel": "Group name",
+      "groupNamePlaceholder": "Cartagena trip",
+      "currencyLabel": "Currency",
+      "pinLabel": "PIN (optional)",
+      "pinPlaceholder": "4–8 digits",
+      "yourNameLabel": "Your name",
+      "yourNamePlaceholder": "Juan",
+      "othersLabel": "Other people",
+      "personPlaceholder": "Person {{n}}",
+      "removePerson": "Remove person",
+      "addAnother": "Add another",
+      "submit": "Create group",
+      "hint": "You can add or rename people at any time."
+    }
+  },
+  "group": {
+    "notFound": {
+      "title": "This link isn't valid",
+      "description": "Ask whoever invited you to send the group link again.",
+      "cta": "Go to SplitIt"
+    },
+    "header": {
+      "peopleCount_one": "{{count}} person · {{currency}}",
+      "peopleCount_other": "{{count}} people · {{currency}}",
+      "shareLink": "Share link",
+      "copiedToast": "Share link copied",
+      "copyErrorToast": "Could not copy the link.",
+      "iAmPlaceholder": "I am…",
+      "switchWho": "Switch who you are",
+      "expenseButton": "Expense"
+    },
+    "tabs": {
+      "balances": "Balances",
+      "expenses": "Expenses",
+      "payments": "Payments",
+      "people": "People"
+    },
+    "identity": {
+      "title": "Who are you?",
+      "description": "This device will remember your pick, and it labels everything you add."
+    },
+    "pin": {
+      "title": "Enter the group PIN",
+      "description": "This group is protected. Ask whoever invited you for the PIN.",
+      "placeholder": "PIN",
+      "submit": "Continue"
+    }
+  },
+  "balances": {
+    "yourPart": {
+      "title": "Your part",
+      "allSettled": "You're square with everyone. Nothing to pay or collect."
+    },
+    "youOwe": "You owe {{name}}",
+    "owesYou": "{{name}} owes you",
+    "markAsPaid": "Mark as paid",
+    "standings": { "title": "Where everyone stands" },
+    "status": { "getsBack": "gets back", "owes": "owes", "settledUp": "settled up" },
+    "shortest": {
+      "title": "Shortest way to settle up",
+      "allSettled": "Nobody owes anybody. Add an expense to get going.",
+      "count_one": "{{count}} payment instead of everyone paying everyone.",
+      "count_other": "{{count}} payments instead of everyone paying everyone."
+    },
+    "breakdown": {
+      "title": "{{name}}'s history",
+      "empty": "Nothing recorded yet.",
+      "expensePaid": "Paid for \"{{description}}\"",
+      "expenseOwed": "Share of \"{{description}}\"",
+      "settlementSent": "Paid {{name}}",
+      "settlementReceived": "Received from {{name}}"
+    }
+  },
+  "expenses": {
+    "method": {
+      "equal": "Equally",
+      "exact": "Exact amounts",
+      "percent": "Percentages",
+      "shares": "Shares"
+    },
+    "searchPlaceholder": "Search expenses",
+    "everyone": "Everyone",
+    "newExpense": "New expense",
+    "empty": {
+      "title": "No expenses here yet",
+      "description": "Add the first one and balances update straight away.",
+      "cta": "Add an expense"
+    },
+    "card": { "meta": "{{date}} · {{method}} · {{payers}} paid" },
+    "editAria": "Edit expense",
+    "deleteAria": "Delete expense",
+    "deletedToast": "Expense deleted",
+    "deleteErrorToast": "Could not delete that expense."
+  },
+  "settlements": {
+    "title": "Payments between people",
+    "subtitle": "Recorded here, paid however you like — cash, transfer, anything.",
+    "recordButton": "Record",
+    "empty": {
+      "title": "No payments yet",
+      "description": "Use \"Mark as paid\" on the balances tab to log one in a tap."
+    },
+    "removeAria": "Remove payment",
+    "removedToast": "Payment removed",
+    "removeErrorToast": "Could not remove that payment."
+  },
+  "people": {
+    "title": "People in this group",
+    "thatsYou": "that's you",
+    "iAmButton": "I am {{name}}",
+    "renameAria": "Rename",
+    "removeAria": "Remove",
+    "addPlaceholder": "Add someone",
+    "removeHint": "Someone can only be removed once their balance is zero. Their past expenses stay.",
+    "removedHeading": "No longer in the group",
+    "addedToast": "Person added",
+    "renamedToast": "Name updated",
+    "removedToast": "Person removed",
+    "pin": {
+      "title": "Group PIN",
+      "onDescription": "This group is protected. Anyone opening the link needs the PIN once per device.",
+      "offDescription": "No PIN set — anyone with the link can open this group.",
+      "placeholder": "4-8 digit PIN",
+      "changeButton": "Change PIN",
+      "setButton": "Set a PIN",
+      "removeButton": "Remove PIN",
+      "updatedToast": "PIN updated",
+      "setToast": "PIN set",
+      "removedToast": "PIN removed"
+    }
+  },
+  "expenseDialog": {
+    "methodHint": {
+      "equal": "Split evenly between everyone selected.",
+      "exact": "Type each person's exact amount.",
+      "percent": "Percentages must add up to 100%.",
+      "shares": "Weights, e.g. 2:1:1 for a bigger room."
+    },
+    "editTitle": "Edit expense",
+    "newTitle": "New expense",
+    "description": "Amounts are in {{currency}}. Anyone in the group can edit this later.",
+    "descriptionLabel": "What was it for?",
+    "descriptionPlaceholder": "Dinner at La Cevichería",
+    "totalLabel": "Total",
+    "whoPaid": {
+      "title": "Who paid?",
+      "multiHint": "Amounts must add up to the total.",
+      "singleHint": "One person covered it.",
+      "togglePayers": "Several payers"
+    },
+    "splitTitle": "How is it split?",
+    "includeAria": "Include {{name}}",
+    "percentAssigned": "100% assigned",
+    "percentLeft": "{{pct}}% left to assign",
+    "percentOver": "{{pct}}% over",
+    "fullyAssigned": "Fully assigned",
+    "remainingToAssign": "Remaining to assign",
+    "leftoverHint": "Leftover cents go to the person who paid most.",
+    "notesPlaceholder": "Anything worth remembering",
+    "addExpense": "Add expense",
+    "updatedToast": "Expense updated",
+    "addedToast": "Expense added",
+    "errors": {
+      "TOTAL_NOT_POSITIVE": "Total must be greater than 0",
+      "NO_PARTICIPANTS": "Pick at least one participant",
+      "EXACT_MISMATCH": "Exact amounts must add up to the total",
+      "PERCENT_MISMATCH": "Percentages must add up to 100.00%",
+      "SHARES_INVALID": "Total shares must be at least 1",
+      "NO_PAYERS": "Add at least one payer",
+      "PAYERS_MISMATCH": "Paid amounts must add up to the total",
+      "ENTER_AMOUNT": "Enter an amount"
+    }
+  },
+  "settleDialog": {
+    "title": "Record a payment",
+    "description": "This only writes it down — no money moves through the app.",
+    "whoPaidLabel": "Who paid",
+    "whoReceivedLabel": "Who received it",
+    "pickPersonPlaceholder": "Pick a person",
+    "amountLabel": "Amount ({{currency}})",
+    "noteLabel": "Note (optional)",
+    "notePlaceholder": "Cash, transfer, …",
+    "submit": "Record payment",
+    "recordedToast": "Payment recorded"
+  },
+  "errors": {
+    "apiCodes": {
+      "GROUP_NOT_FOUND": "This group link is not valid.",
+      "DUPLICATE_MEMBER": "That name is already in this group.",
+      "INVALID_NAME": "A name must be 1–40 characters.",
+      "MEMBER_NOT_FOUND": "That member no longer exists.",
+      "BALANCE_NOT_ZERO": "This person still has an open balance. Settle up first.",
+      "INVALID_DESCRIPTION": "The description must be 1–120 characters.",
+      "INVALID_TOTAL": "The total must be greater than 0.",
+      "PAYERS_MISMATCH": "Paid amounts must add up to the total.",
+      "INVALID_SPLIT": "That split doesn't add up. Check the amounts.",
+      "EXPENSE_NOT_FOUND": "That expense no longer exists.",
+      "SAME_MEMBER": "Pick two different members.",
+      "INVALID_AMOUNT": "The amount must be greater than 0.",
+      "SETTLEMENT_NOT_FOUND": "That payment no longer exists.",
+      "IDENTITY_REQUIRED": "Pick who you are first.",
+      "PIN_REQUIRED": "Enter the group PIN to continue.",
+      "INVALID_PIN": "That PIN isn't valid.",
+      "TOO_MANY_ATTEMPTS": "Too many attempts. Try again in 15 minutes.",
+      "NETWORK_ERROR": "Could not reach the server. Is the backend running?"
+    }
+  }
+}

@@ -2,9 +2,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { Check, Link2, Plus, Users } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { ExpenseDialog } from "@/components/expense-dialog";
+import { LanguageToggle } from "@/components/language-toggle";
 import { MemberDot, memberOf } from "@/components/member-bits";
 import { SettleDialog, type SettlePrefill } from "@/components/settle-dialog";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -26,6 +28,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { translateApiError } from "@/lib/api-errors";
 import { GroupProvider } from "@/lib/group-context";
 import * as api from "@/lib/mock-api";
 import { expensesQuery, groupQuery } from "@/lib/queries";
@@ -44,14 +47,15 @@ export const Route = createFileRoute("/g/$slug")({
 });
 
 const TABS = [
-  { to: "/g/$slug", label: "Balances", exact: true },
-  { to: "/g/$slug/expenses", label: "Expenses", exact: false },
-  { to: "/g/$slug/settlements", label: "Payments", exact: false },
-  { to: "/g/$slug/people", label: "People", exact: false },
+  { to: "/g/$slug", labelKey: "group.tabs.balances", exact: true },
+  { to: "/g/$slug/expenses", labelKey: "group.tabs.expenses", exact: false },
+  { to: "/g/$slug/settlements", labelKey: "group.tabs.payments", exact: false },
+  { to: "/g/$slug/people", labelKey: "group.tabs.people", exact: false },
 ] as const;
 
 function GroupLayout() {
   const { slug } = Route.useParams();
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { data: group, isPending, isError, error } = useQuery(groupQuery(slug));
@@ -88,7 +92,7 @@ function GroupLayout() {
       void qc.invalidateQueries({ queryKey: ["group", slug] });
     },
     onError: (err) => {
-      toast.error(err instanceof ApiError ? err.message : "Something went wrong. Try again.");
+      toast.error(translateApiError(t, err));
     },
   });
 
@@ -96,10 +100,10 @@ function GroupLayout() {
     try {
       await navigator.clipboard.writeText(`${window.location.origin}/g/${slug}`);
       setCopied(true);
-      toast.success("Share link copied");
+      toast.success(t("group.header.copiedToast"));
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      toast.error("Could not copy the link.");
+      toast.error(t("group.header.copyErrorToast"));
     }
   };
 
@@ -123,15 +127,13 @@ function GroupLayout() {
             if (pin.trim()) pinMutation.mutate(pin.trim());
           }}
         >
-          <h1 className="text-2xl font-semibold">Enter the group PIN</h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            This group is protected. Ask whoever invited you for the PIN.
-          </p>
+          <h1 className="text-2xl font-semibold">{t("group.pin.title")}</h1>
+          <p className="mt-2 text-sm text-muted-foreground">{t("group.pin.description")}</p>
           <Input
             autoFocus
             inputMode="numeric"
             className="mt-6"
-            placeholder="PIN"
+            placeholder={t("group.pin.placeholder")}
             value={pin}
             onChange={(e) => setPin(e.target.value)}
           />
@@ -140,7 +142,7 @@ function GroupLayout() {
             className="mt-4 w-full"
             disabled={pinMutation.isPending || !pin.trim()}
           >
-            {pinMutation.isPending ? "Checking…" : "Continue"}
+            {pinMutation.isPending ? t("common.checking") : t("group.pin.submit")}
           </Button>
         </form>
       </div>
@@ -151,12 +153,10 @@ function GroupLayout() {
     return (
       <div className="flex min-h-screen items-center justify-center px-5 text-center">
         <div>
-          <h1 className="text-2xl font-semibold">This link isn't valid</h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Ask whoever invited you to send the group link again.
-          </p>
+          <h1 className="text-2xl font-semibold">{t("group.notFound.title")}</h1>
+          <p className="mt-2 text-sm text-muted-foreground">{t("group.notFound.description")}</p>
           <Button asChild className="mt-6">
-            <Link to="/">Go to SplitIt</Link>
+            <Link to="/">{t("group.notFound.cta")}</Link>
           </Button>
         </div>
       </div>
@@ -194,25 +194,31 @@ function GroupLayout() {
             <div className="mr-auto min-w-0">
               <p className="truncate font-medium">{group.name}</p>
               <p className="text-xs text-muted-foreground">
-                {activeMembers.length} people · {group.currency_code}
+                {t("group.header.peopleCount", {
+                  count: activeMembers.length,
+                  currency: group.currency_code,
+                })}
               </p>
             </div>
 
             <Button variant="ghost" size="sm" onClick={copyLink}>
               {copied ? <Check className="size-4" /> : <Link2 className="size-4" />}
-              <span className="hidden sm:inline">Share link</span>
+              <span className="hidden sm:inline">{t("group.header.shareLink")}</span>
             </Button>
+            <LanguageToggle />
             <ThemeToggle />
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="secondary" size="sm" className="gap-2">
                   {me ? <MemberDot member={me} size="sm" /> : <Users className="size-4" />}
-                  <span className="max-w-24 truncate">{me?.name ?? "I am…"}</span>
+                  <span className="max-w-24 truncate">
+                    {me?.name ?? t("group.header.iAmPlaceholder")}
+                  </span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Switch who you are</DropdownMenuLabel>
+                <DropdownMenuLabel>{t("group.header.switchWho")}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 {activeMembers.map((m) => (
                   <DropdownMenuItem key={m.id} onClick={() => pickActor(m.id)}>
@@ -232,7 +238,7 @@ function GroupLayout() {
               }}
             >
               <Plus className="size-4" />
-              <span className="hidden sm:inline">Expense</span>
+              <span className="hidden sm:inline">{t("group.header.expenseButton")}</span>
             </Button>
           </div>
 
@@ -253,7 +259,7 @@ function GroupLayout() {
                       : "border-transparent text-muted-foreground hover:text-foreground"
                   }`}
                 >
-                  {tab.label}
+                  {t(tab.labelKey)}
                 </Link>
               );
             })}
@@ -289,10 +295,8 @@ function GroupLayout() {
         <Dialog open={identityOpen} onOpenChange={setIdentityOpen}>
           <DialogContent className="sm:max-w-sm">
             <DialogHeader>
-              <DialogTitle>Who are you?</DialogTitle>
-              <DialogDescription>
-                This device will remember your pick, and it labels everything you add.
-              </DialogDescription>
+              <DialogTitle>{t("group.identity.title")}</DialogTitle>
+              <DialogDescription>{t("group.identity.description")}</DialogDescription>
             </DialogHeader>
             <div className="grid gap-2">
               {activeMembers.map((m) => (

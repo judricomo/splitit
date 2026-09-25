@@ -1,9 +1,12 @@
+import { useTranslation } from "react-i18next";
+
 import { cn } from "@/lib/utils";
 import { formatMinor } from "@/lib/money";
+import i18n from "@/lib/i18n";
 import type { Group, Member } from "@/lib/types";
 
 export function memberName(group: Group | undefined, id: string) {
-  return group?.members.find((m) => m.id === id)?.name ?? "Unknown";
+  return group?.members.find((m) => m.id === id)?.name ?? i18n.t("common.unknown");
 }
 
 export function memberOf(group: Group | undefined, id: string | null | undefined) {
@@ -55,6 +58,7 @@ export function Money({
   className?: string | undefined;
   tone?: "auto" | "plain" | undefined;
 }) {
+  const { i18n: i18nInstance } = useTranslation();
   const toneClass =
     tone === "plain"
       ? ""
@@ -65,7 +69,11 @@ export function Money({
           : "text-muted-foreground";
   return (
     <span className={cn("money", tone === "plain" ? "" : toneClass, className)}>
-      {formatMinor(amountMinor, group.currency_code, group.currency_exponent, { signed, abs })}
+      {formatMinor(amountMinor, group.currency_code, group.currency_exponent, {
+        signed,
+        abs,
+        locale: i18nInstance.language,
+      })}
     </span>
   );
 }

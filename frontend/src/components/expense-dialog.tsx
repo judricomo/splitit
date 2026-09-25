@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { MemberDot, Money } from "@/components/member-bits";
@@ -18,17 +19,26 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { translateApiError } from "@/lib/api-errors";
 import { computeSplits, validatePayers } from "@/lib/ledger";
 import * as api from "@/lib/mock-api";
 import { basisPointsToInput, minorToInput, parseToBasisPoints, parseToMinor } from "@/lib/money";
 import { groupKeys } from "@/lib/queries";
-import { ApiError, type Expense, type Group, type SplitMethod } from "@/lib/types";
+import type { Expense, Group, SplitMethod } from "@/lib/types";
 
-const METHODS: { value: SplitMethod; label: string; hint: string }[] = [
-  { value: "equal", label: "Equally", hint: "Split evenly between everyone selected." },
-  { value: "exact", label: "Exact", hint: "Type each person's exact amount." },
-  { value: "percent", label: "Percent", hint: "Percentages must add up to 100%." },
-  { value: "shares", label: "Shares", hint: "Weights, e.g. 2:1:1 for a bigger room." },
+const METHODS: { value: SplitMethod; labelKey: string; hintKey: string }[] = [
+  { value: "equal", labelKey: "expenses.method.equal", hintKey: "expenseDialog.methodHint.equal" },
+  { value: "exact", labelKey: "expenses.method.exact", hintKey: "expenseDialog.methodHint.exact" },
+  {
+    value: "percent",
+    labelKey: "expenses.method.percent",
+    hintKey: "expenseDialog.methodHint.percent",
+  },
+  {
+    value: "shares",
+    labelKey: "expenses.method.shares",
+    hintKey: "expenseDialog.methodHint.shares",
+  },
 ];
 
 type ValueMap = Record<string, string>;
@@ -49,6 +59,7 @@ export function ExpenseDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   const qc = useQueryClient();
+  const { t } = useTranslation();
   const exp = group.currency_exponent;
   const active = useMemo(() => group.members.filter((m) => !m.removed_at), [group.members]);
 
@@ -145,7 +156,7 @@ export function ExpenseDialog({
     [totalMinor, splitInput, payers],
   );
 
-  const payerError = totalMinor > 0 ? validatePayers(totalMinor, payers) : "Enter an amount";
+  const payerError = totalMinor > 0 ? validatePayers(totalMinor, payers) : "ENTER_AMOUNT";
   const assigned = preview.rows.reduce((acc, r) => acc + r.owed_minor, 0);
   const remaining = totalMinor - assigned;
   const remainingBp =
@@ -173,11 +184,11 @@ export function ExpenseDialog({
     },
     onSuccess: () => {
       groupKeys(slug).forEach((key) => void qc.invalidateQueries({ queryKey: key }));
-      toast.success(expense ? "Expense updated" : "Expense added");
+      toast.success(expense ? t("expenseDialog.updatedToast") : t("expenseDialog.addedToast"));
       onOpenChange(false);
     },
     onError: (error) => {
-      toast.error(error instanceof ApiError ? error.message : "Something went wrong. Try again.");
+      toast.error(translateApiError(t, error));
     },
   });
 
@@ -188,26 +199,28 @@ export function ExpenseDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>{expense ? "Edit expense" : "New expense"}</DialogTitle>
+          <DialogTitle>
+            {expense ? t("expenseDialog.editTitle") : t("expenseDialog.newTitle")}
+          </DialogTitle>
           <DialogDescription>
-            Amounts are in {group.currency_code}. Anyone in the group can edit this later.
+            {t("expenseDialog.description", { currency: group.currency_code })}
           </DialogDescription>
         </DialogHeader>
 
         <div className="grid gap-5">
           <div className="grid gap-4 sm:grid-cols-[1fr_auto_auto]">
             <div className="grid gap-2">
-              <Label htmlFor="description">What was it for?</Label>
+              <Label htmlFor="description">{t("expenseDialog.descriptionLabel")}</Label>
               <Input
                 id="description"
                 value={description}
                 maxLength={120}
-                placeholder="Dinner at La Cevichería"
+                placeholder={t("expenseDialog.descriptionPlaceholder")}
                 onChange={(e) => setDescription(e.target.value)}
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="amount">Total</Label>
+              <Label htmlFor="amount">{t("expenseDialog.totalLabel")}</Label>
               <Input
                 id="amount"
                 className="money sm:w-36"
@@ -218,7 +231,7 @@ export function ExpenseDialog({
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="date">Date</Label>
+              <Label htmlFor="date">{t("common.date")}</Label>
               <Input
                 id="date"
                 type="date"
@@ -232,13 +245,15 @@ export function ExpenseDialog({
           <div className="rounded-xl border bg-card p-4">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <p className="text-sm font-medium">Who paid?</p>
+                <p className="text-sm font-medium">{t("expenseDialog.whoPaid.title")}</p>
                 <p className="text-xs text-muted-foreground">
-                  {multiPayer ? "Amounts must add up to the total." : "One person covered it."}
+                  {multiPayer
+                    ? t("expenseDialog.whoPaid.multiHint")
+                    : t("expenseDialog.whoPaid.singleHint")}
                 </p>
               </div>
               <label className="flex items-center gap-2 text-xs text-muted-foreground">
-                Several payers
+                {t("expenseDialog.whoPaid.togglePayers")}
                 <Switch checked={multiPayer} onCheckedChange={setMultiPayer} />
               </label>
             </div>
@@ -277,14 +292,14 @@ export function ExpenseDialog({
                   </div>
                 ))}
                 {payerError && totalMinor > 0 ? (
-                  <p className="text-xs text-negative">{payerError}</p>
+                  <p className="text-xs text-negative">{t(`expenseDialog.errors.${payerError}`)}</p>
                 ) : null}
               </div>
             )}
           </div>
 
           <div className="rounded-xl border bg-card p-4">
-            <p className="text-sm font-medium">How is it split?</p>
+            <p className="text-sm font-medium">{t("expenseDialog.splitTitle")}</p>
             <Tabs
               value={method}
               onValueChange={(v) => setMethod(v as SplitMethod)}
@@ -293,13 +308,13 @@ export function ExpenseDialog({
               <TabsList className="w-full">
                 {METHODS.map((m) => (
                   <TabsTrigger key={m.value} value={m.value} className="flex-1">
-                    {m.label}
+                    {t(m.labelKey)}
                   </TabsTrigger>
                 ))}
               </TabsList>
             </Tabs>
             <p className="mt-2 text-xs text-muted-foreground">
-              {METHODS.find((m) => m.value === method)!.hint}
+              {t(METHODS.find((m) => m.value === method)!.hintKey)}
             </p>
 
             <div className="mt-4 grid gap-2">
@@ -314,7 +329,7 @@ export function ExpenseDialog({
                     <Checkbox
                       checked={checked}
                       onCheckedChange={() => toggleParticipant(m.id)}
-                      aria-label={`Include ${m.name}`}
+                      aria-label={t("expenseDialog.includeAria", { name: m.name })}
                     />
                     <MemberDot member={m} size="sm" />
                     <span className="flex-1 text-sm">{m.name}</span>
@@ -368,44 +383,58 @@ export function ExpenseDialog({
               {method === "percent" ? (
                 <span className={remainingBp === 0 ? "text-muted-foreground" : "text-negative"}>
                   {remainingBp === 0
-                    ? "100% assigned"
-                    : `${basisPointsToInput(Math.abs(remainingBp))}% ${remainingBp > 0 ? "left to assign" : "over"}`}
+                    ? t("expenseDialog.percentAssigned")
+                    : remainingBp > 0
+                      ? t("expenseDialog.percentLeft", {
+                          pct: basisPointsToInput(Math.abs(remainingBp)),
+                        })
+                      : t("expenseDialog.percentOver", {
+                          pct: basisPointsToInput(Math.abs(remainingBp)),
+                        })}
                 </span>
               ) : (
                 <span className={remaining === 0 ? "text-muted-foreground" : "text-negative"}>
-                  {remaining === 0 ? "Fully assigned" : "Remaining to assign"}{" "}
+                  {remaining === 0
+                    ? t("expenseDialog.fullyAssigned")
+                    : t("expenseDialog.remainingToAssign")}{" "}
                   {remaining !== 0 ? (
                     <Money amountMinor={remaining} group={group} abs tone="plain" />
                   ) : null}
                 </span>
               )}
               {preview.rows.some((r) => r.is_rounding) ? (
-                <span className="text-muted-foreground">
-                  Leftover cents go to the person who paid most.
-                </span>
+                <span className="text-muted-foreground">{t("expenseDialog.leftoverHint")}</span>
               ) : null}
             </div>
-            {preview.error ? <p className="mt-2 text-xs text-negative">{preview.error}</p> : null}
+            {preview.error ? (
+              <p className="mt-2 text-xs text-negative">
+                {t(`expenseDialog.errors.${preview.error}`)}
+              </p>
+            ) : null}
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="notes">Notes (optional)</Label>
+            <Label htmlFor="notes">{t("common.notesLabel")}</Label>
             <Textarea
               id="notes"
               rows={2}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Anything worth remembering"
+              placeholder={t("expenseDialog.notesPlaceholder")}
             />
           </div>
         </div>
 
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t("common.cancel")}
           </Button>
           <Button disabled={!canSave || mutation.isPending} onClick={() => mutation.mutate()}>
-            {mutation.isPending ? "Saving…" : expense ? "Save changes" : "Add expense"}
+            {mutation.isPending
+              ? t("common.saving")
+              : expense
+                ? t("common.saveChanges")
+                : t("expenseDialog.addExpense")}
           </Button>
         </DialogFooter>
       </DialogContent>

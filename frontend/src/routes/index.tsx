@@ -2,8 +2,10 @@ import { useMutation } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowRight, Plus, Receipt, Scale, Split, X } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
+import { LanguageToggle } from "@/components/language-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -17,8 +19,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import * as api from "@/lib/mock-api";
+import { translateApiError } from "@/lib/api-errors";
 import { SUPPORTED_CURRENCIES } from "@/lib/money";
-import { ApiError } from "@/lib/types";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -41,6 +43,7 @@ export const Route = createFileRoute("/")({
 
 function Home() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [name, setName] = useState("");
   const [currency, setCurrency] = useState("COP");
   const [myName, setMyName] = useState("");
@@ -62,11 +65,10 @@ function Home() {
         pin: pin || null,
       }),
     onSuccess: (group) => {
-      toast.success("Group created");
+      toast.success(t("home.toastCreated"));
       void navigate({ to: "/g/$slug", params: { slug: group.slug } });
     },
-    onError: (error) =>
-      toast.error(error instanceof ApiError ? error.message : "Could not create the group."),
+    onError: (error) => toast.error(translateApiError(t, error)),
   });
 
   const canCreate = name.trim().length > 0 && myName.trim().length > 0;
@@ -77,31 +79,39 @@ function Home() {
         <span className="font-display text-lg font-semibold">
           Split<span className="text-primary">It</span>
         </span>
-        <ThemeToggle />
+        <div className="flex items-center gap-1">
+          <LanguageToggle />
+          <ThemeToggle />
+        </div>
       </header>
 
       <main className="mx-auto grid max-w-6xl gap-10 px-5 pb-20 lg:grid-cols-[1.05fr_0.95fr] lg:gap-14 lg:pt-10">
         <section className="flex flex-col justify-center">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-            No accounts. Just a link.
+            {t("home.eyebrow")}
           </p>
           <h1 className="mt-4 text-4xl font-semibold leading-[1.05] sm:text-5xl">
-            Shared costs, settled in the fewest payments.
+            {t("home.headline")}
           </h1>
-          <p className="mt-5 max-w-lg text-base text-muted-foreground">
-            Log what everyone paid, split it evenly, by exact amounts, percentages or shares, and
-            SplitIt works out exactly who should pay whom.
-          </p>
+          <p className="mt-5 max-w-lg text-base text-muted-foreground">{t("home.subhead")}</p>
 
           <ul className="mt-8 grid gap-3 sm:grid-cols-3">
             {[
               {
                 icon: Split,
-                title: "Four ways to split",
-                text: "Equal, exact, percent or shares.",
+                title: t("home.features.split.title"),
+                text: t("home.features.split.text"),
               },
-              { icon: Receipt, title: "Several payers", text: "One bill, many wallets." },
-              { icon: Scale, title: "Always balanced", text: "Down to the last cent." },
+              {
+                icon: Receipt,
+                title: t("home.features.payers.title"),
+                text: t("home.features.payers.text"),
+              },
+              {
+                icon: Scale,
+                title: t("home.features.balanced.title"),
+                text: t("home.features.balanced.text"),
+              },
             ].map((f) => (
               <li key={f.title} className="rounded-xl border bg-card/70 p-4 backdrop-blur">
                 <f.icon className="size-4 text-primary" />
@@ -114,7 +124,7 @@ function Home() {
           <div className="mt-8">
             <Button asChild variant="secondary">
               <Link to="/g/$slug" params={{ slug: api.DEMO_SLUG }}>
-                Open the demo group
+                {t("home.demoLink")}
                 <ArrowRight className="size-4" />
               </Link>
             </Button>
@@ -123,7 +133,7 @@ function Home() {
           {recent.length > 0 ? (
             <div className="mt-10">
               <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                Groups on this device
+                {t("home.recentGroupsHeading")}
               </p>
               <div className="mt-3 grid gap-2">
                 {recent.map((r) => (
@@ -146,25 +156,23 @@ function Home() {
           <Card className="border-border/70 shadow-[var(--shadow-lift)]">
             <CardContent className="grid gap-5 pt-6">
               <div>
-                <h2 className="text-xl font-semibold">Create a group</h2>
-                <p className="text-sm text-muted-foreground">
-                  You get a secret link to share with everyone.
-                </p>
+                <h2 className="text-xl font-semibold">{t("home.form.heading")}</h2>
+                <p className="text-sm text-muted-foreground">{t("home.form.subheading")}</p>
               </div>
 
               <div className="grid gap-2">
-                <Label htmlFor="group-name">Group name</Label>
+                <Label htmlFor="group-name">{t("home.form.groupNameLabel")}</Label>
                 <Input
                   id="group-name"
                   value={name}
-                  placeholder="Cartagena trip"
+                  placeholder={t("home.form.groupNamePlaceholder")}
                   onChange={(e) => setName(e.target.value)}
                 />
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="grid gap-2">
-                  <Label>Currency</Label>
+                  <Label>{t("home.form.currencyLabel")}</Label>
                   <Select value={currency} onValueChange={setCurrency}>
                     <SelectTrigger>
                       <SelectValue />
@@ -179,37 +187,37 @@ function Home() {
                   </Select>
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="pin">PIN (optional)</Label>
+                  <Label htmlFor="pin">{t("home.form.pinLabel")}</Label>
                   <Input
                     id="pin"
                     inputMode="numeric"
                     maxLength={8}
                     value={pin}
-                    placeholder="4–8 digits"
+                    placeholder={t("home.form.pinPlaceholder")}
                     onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
                   />
                 </div>
               </div>
 
               <div className="grid gap-2">
-                <Label htmlFor="my-name">Your name</Label>
+                <Label htmlFor="my-name">{t("home.form.yourNameLabel")}</Label>
                 <Input
                   id="my-name"
                   value={myName}
                   maxLength={40}
-                  placeholder="Juan"
+                  placeholder={t("home.form.yourNamePlaceholder")}
                   onChange={(e) => setMyName(e.target.value)}
                 />
               </div>
 
               <div className="grid gap-2">
-                <Label>Other people</Label>
+                <Label>{t("home.form.othersLabel")}</Label>
                 {others.map((value, i) => (
                   <div key={i} className="flex gap-2">
                     <Input
                       value={value}
                       maxLength={40}
-                      placeholder={`Person ${i + 1}`}
+                      placeholder={t("home.form.personPlaceholder", { n: i + 1 })}
                       onChange={(e) =>
                         setOthers((prev) => prev.map((v, idx) => (idx === i ? e.target.value : v)))
                       }
@@ -218,7 +226,7 @@ function Home() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        aria-label="Remove person"
+                        aria-label={t("home.form.removePerson")}
                         onClick={() => setOthers((prev) => prev.filter((_, idx) => idx !== i))}
                       >
                         <X className="size-4" />
@@ -233,7 +241,7 @@ function Home() {
                   onClick={() => setOthers((prev) => [...prev, ""])}
                 >
                   <Plus className="size-4" />
-                  Add another
+                  {t("home.form.addAnother")}
                 </Button>
               </div>
 
@@ -242,11 +250,9 @@ function Home() {
                 disabled={!canCreate || create.isPending}
                 onClick={() => create.mutate()}
               >
-                {create.isPending ? "Creating…" : "Create group"}
+                {create.isPending ? t("common.creating") : t("home.form.submit")}
               </Button>
-              <p className="text-xs text-muted-foreground">
-                You can add or rename people at any time.
-              </p>
+              <p className="text-xs text-muted-foreground">{t("home.form.hint")}</p>
             </CardContent>
           </Card>
         </section>
