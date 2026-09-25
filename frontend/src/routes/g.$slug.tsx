@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { Check, Link2, Plus, Users } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -24,10 +24,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { GroupProvider } from "@/lib/group-context";
 import * as api from "@/lib/mock-api";
 import { expensesQuery, groupQuery } from "@/lib/queries";
+import { ApiError } from "@/lib/types";
 
 export const Route = createFileRoute("/g/$slug")({
   head: () => ({
@@ -52,7 +54,7 @@ function GroupLayout() {
   const { slug } = Route.useParams();
   const qc = useQueryClient();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const { data: group, isPending, isError } = useQuery(groupQuery(slug));
+  const { data: group, isPending, isError, error } = useQuery(groupQuery(slug));
 
   const [actorId, setActorId] = useState<string | null>(null);
   const [identityOpen, setIdentityOpen] = useState(false);
@@ -61,6 +63,7 @@ function GroupLayout() {
   const [settleOpen, setSettleOpen] = useState(false);
   const [prefill, setPrefill] = useState<SettlePrefill | null>(null);
   const [copied, setCopied] = useState(false);
+  const [pin, setPin] = useState("");
 
   const { data: expenses } = useQuery({ ...expensesQuery(slug), enabled: Boolean(group) });
 
@@ -75,6 +78,19 @@ function GroupLayout() {
     setIdentityOpen(false);
     void api.setIdentity(slug, memberId);
   };
+
+  const pinRequired = isError && error instanceof ApiError && error.code === "PIN_REQUIRED";
+
+  const pinMutation = useMutation({
+    mutationFn: (value: string) => api.verifyPin(slug, value),
+    onSuccess: () => {
+      setPin("");
+      void qc.invalidateQueries({ queryKey: ["group", slug] });
+    },
+    onError: (err) => {
+      toast.error(err instanceof ApiError ? err.message : "Something went wrong. Try again.");
+    },
+  });
 
   const copyLink = async () => {
     try {
@@ -93,6 +109,40 @@ function GroupLayout() {
         <Skeleton className="h-10 w-56" />
         <Skeleton className="h-40 w-full" />
         <Skeleton className="h-40 w-full" />
+      </div>
+    );
+  }
+
+  if (pinRequired) {
+    return (
+      <div className="flex min-h-screen items-center justify-center px-5 text-center">
+        <form
+          className="w-full max-w-sm text-left"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (pin.trim()) pinMutation.mutate(pin.trim());
+          }}
+        >
+          <h1 className="text-2xl font-semibold">Enter the group PIN</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            This group is protected. Ask whoever invited you for the PIN.
+          </p>
+          <Input
+            autoFocus
+            inputMode="numeric"
+            className="mt-6"
+            placeholder="PIN"
+            value={pin}
+            onChange={(e) => setPin(e.target.value)}
+          />
+          <Button
+            type="submit"
+            className="mt-4 w-full"
+            disabled={pinMutation.isPending || !pin.trim()}
+          >
+            {pinMutation.isPending ? "Checking…" : "Continue"}
+          </Button>
+        </form>
       </div>
     );
   }

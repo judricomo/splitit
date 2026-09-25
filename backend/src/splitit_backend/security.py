@@ -53,7 +53,11 @@ def set_identity_cookie(response: Response, slug: str, member_id: str) -> None:
     response.set_cookie(
         identity_cookie_name(slug),
         member_id,
-        httponly=True,
+        # Not HttpOnly: the frontend reads this cookie directly (via
+        # `document.cookie`) to know "who am I" for its own UI, e.g. to
+        # highlight the current member or default a payer. This is safe
+        # because identity is a label, not a security boundary (spec §7.2).
+        httponly=False,
         samesite="lax",
         max_age=90 * 24 * 60 * 60,
         path="/",
