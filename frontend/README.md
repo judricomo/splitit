@@ -1,4 +1,4 @@
-# Mock App Starter
+# SplitIt — Frontend
 
 I want to create an app so i want to create the front end for this app, but i want to start thinking about the backend for this app so at this time just want you to make mock calls to the backend and later I will create it on my end.
 
