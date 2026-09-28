@@ -38,6 +38,18 @@ database later without touching the routers.
 
 Requirements: Node.js + npm, Python 3.12+ and [uv](https://docs.astral.sh/uv/).
 
+### Using Make (recommended)
+
+```bash
+make install   # uv sync (backend) + npm install (frontend)
+make dev       # run backend (:8000) and frontend (:8080) together, Ctrl+C stops both
+```
+
+Other useful targets: `make backend`, `make frontend`, `make stop`,
+`make test`, `make lint`, `make help`. Run `make help` to see all targets.
+
+### Manual
+
 **Backend** (http://localhost:8000):
 
 ```bash
@@ -58,6 +70,13 @@ Open http://localhost:8080 — the homepage links to a seeded demo group, or
 create your own. See [`backend/README.md`](backend/README.md) and
 [`frontend/README.md`](frontend/README.md) for details, testing, and
 troubleshooting.
+
+> **Note:** if the repo lives in an iCloud-synced folder (e.g. `~/Documents`),
+> macOS may mark `backend/.venv` files as hidden, which breaks Python's
+> package resolution (`ModuleNotFoundError: No module named
+> 'splitit_backend'`). Run `make fix-venv` (or `chflags -R nohidden
+> backend/.venv`) to fix it — `make backend`/`make dev` already do this
+> automatically.
 
 ## Testing
 
