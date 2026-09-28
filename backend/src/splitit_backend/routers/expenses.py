@@ -8,7 +8,8 @@ from ..errors import ApiError
 from ..ledger import compute_splits, validate_payers
 from ..models import Expense, ExpenseInput, PreviewSplitInput, PreviewSplitResponse
 from ..security import require_group_access, require_identity
-from ..store import _uid, store
+from .. import store as store_mod
+from ..store import _uid
 
 router = APIRouter(tags=["Expenses"])
 
@@ -38,7 +39,7 @@ def list_expenses(
     to: date | None = None,
 ) -> list[Expense]:
     group = require_group_access(slug, request)
-    rows = [e for e in store.expenses.values() if e.group_id == group.id and not e.deleted_at]
+    rows = [e for e in store_mod.group_expenses(group.id) if not e.deleted_at]
     if member:
         rows = [
             e
@@ -86,14 +87,14 @@ def create_expense(slug: str, input: ExpenseInput, request: Request) -> Expense:
         deleted_at=None,
         version=1,
     )
-    store.expenses[expense.id] = expense
+    store_mod.create_expense(expense)
     return expense
 
 
 @router.patch("/g/{slug}/expenses/{expense_id}", response_model=Expense)
 def update_expense(slug: str, expense_id: str, input: ExpenseInput, request: Request) -> Expense:
     require_group_access(slug, request)
-    expense = store.expenses.get(expense_id)
+    expense = store_mod.get_expense(expense_id)
     if expense is None:
         raise ApiError(404, "EXPENSE_NOT_FOUND", "That expense no longer exists.")
     splits = _validate_expense(input)
@@ -105,22 +106,25 @@ def update_expense(slug: str, expense_id: str, input: ExpenseInput, request: Req
     expense.payers = [p for p in input.payers if p.paid_minor > 0]
     expense.splits = splits
     expense.version += 1
+    store_mod.save_expense(expense)
     return expense
 
 
 @router.delete("/g/{slug}/expenses/{expense_id}", status_code=204)
 def delete_expense(slug: str, expense_id: str, request: Request) -> None:
     require_group_access(slug, request)
-    expense = store.expenses.get(expense_id)
+    expense = store_mod.get_expense(expense_id)
     if expense is None:
         raise ApiError(404, "EXPENSE_NOT_FOUND", "That expense no longer exists.")
     expense.deleted_at = datetime.now(timezone.utc)
+    store_mod.save_expense(expense)
 
 
 @router.post("/g/{slug}/expenses/{expense_id}/restore", status_code=204)
 def restore_expense(slug: str, expense_id: str, request: Request) -> None:
     require_group_access(slug, request)
-    expense = store.expenses.get(expense_id)
+    expense = store_mod.get_expense(expense_id)
     if expense is None:
         raise ApiError(404, "EXPENSE_NOT_FOUND", "That expense no longer exists.")
     expense.deleted_at = None
+    store_mod.save_expense(expense)

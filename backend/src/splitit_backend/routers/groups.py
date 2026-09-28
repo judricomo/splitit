@@ -6,7 +6,7 @@ from .. import store as store_mod
 from ..errors import ApiError
 from ..models import CreateGroupInput, Group, UpdateGroupInput
 from ..security import require_group_access, set_identity_cookie, set_session_cookie
-from ..store import MEMBER_COLORS, _hash_pin, _now, _slug, _uid, exponent_for, store
+from ..store import MEMBER_COLORS, _hash_pin, _now, _slug, _uid, exponent_for
 from ..models import Member
 
 router = APIRouter(tags=["Groups"])
@@ -38,9 +38,9 @@ def create_group(input: CreateGroupInput, response: Response) -> Group:
         version=1,
         members=members,
     )
-    store.groups[group.slug] = group
+    pin_hash = _hash_pin(input.pin) if input.pin else None
+    store_mod.create_group(group, pin_hash=pin_hash)
     if input.pin:
-        store.pin_hashes[group.slug] = _hash_pin(input.pin)
         token = store_mod.issue_session_token(group.slug)
         set_session_cookie(response, group.slug, token)
     if members:
@@ -59,13 +59,14 @@ def update_group(slug: str, patch: UpdateGroupInput, request: Request) -> Group:
     if patch.name and patch.name.strip():
         group.name = patch.name.strip()
     if patch.remove_pin:
-        store.pin_hashes.pop(slug, None)
+        store_mod.clear_pin_hash(slug)
         group.pin_required = False
     elif patch.pin is not None:
         pin = patch.pin.strip()
         if not (pin.isdigit() and 4 <= len(pin) <= 8):
             raise ApiError(422, "INVALID_PIN", "The PIN must be 4-8 digits.")
-        store.pin_hashes[slug] = _hash_pin(pin)
+        store_mod.set_pin_hash(slug, _hash_pin(pin))
         group.pin_required = True
     group.version += 1
+    store_mod.save_group(group)
     return group

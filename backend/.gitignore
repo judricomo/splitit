@@ -5,3 +5,7 @@ __pycache__/
 .coverage
 htmlcov/
 *.egg-info/
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3

@@ -1,5 +1,14 @@
 from __future__ import annotations
 
+import os
+import tempfile
+
+# Point the app at an isolated, disposable SQLite file for the whole test
+# session (must happen before any `splitit_backend` module is imported,
+# since the DB engine is created at import time).
+_TEST_DB_DIR = tempfile.mkdtemp(prefix="splitit-tests-")
+os.environ["SPLITIT_DATABASE_URL"] = f"sqlite:///{_TEST_DB_DIR}/test.db"
+
 import pytest
 from fastapi.testclient import TestClient
 

@@ -11,16 +11,18 @@ Full product spec: [`docs/spec.md`](docs/spec.md).
 
 ```
 frontend/   React + Vite + TanStack Start app (UI)
-backend/    FastAPI app with a mock in-memory database
+backend/    FastAPI app, backed by SQLite (via SQLAlchemy) by default
 openapi.yaml  API contract shared by both — the source of truth for every
               endpoint, request/response shape and auth requirement
 docs/       Product spec
 ```
 
 The frontend talks to the backend over HTTP using the contract in
-`openapi.yaml`. The backend currently stores everything in memory
-(`backend/src/splitit_backend/store.py`) so it can be swapped for a real
-database later without touching the routers.
+`openapi.yaml`. The backend persists data via SQLAlchemy
+(`backend/src/splitit_backend/db.py` + `db_models.py`), defaulting to a
+local SQLite file. The connection string is configurable via
+`SPLITIT_DATABASE_URL`, so switching to Postgres later needs no code
+changes — see [Configuration](#configuration-optional) below.
 
 ## Features
 
@@ -130,6 +132,11 @@ so plain `http://localhost:8000/docs` will 404.
 - **Backend CORS origins**: set `SPLITIT_CORS_ORIGINS` (comma-separated) if
   the frontend runs somewhere other than `http://localhost:8080`; defaults to
   `http://localhost:8080,http://127.0.0.1:8080`.
+- **Backend database**: set `SPLITIT_DATABASE_URL` to any SQLAlchemy
+  connection string (e.g. `postgresql+psycopg://user:pass@host/db`) to point
+  the backend at a different database. Defaults to a local SQLite file
+  (`backend/splitit.db`), created automatically on first startup — no setup
+  needed to get going.
 
 See [`backend/README.md`](backend/README.md) and
 [`frontend/README.md`](frontend/README.md) for more detail on each app.

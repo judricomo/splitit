@@ -20,7 +20,7 @@ def verify_pin(slug: str, body: PinInput, request: Request, response: Response) 
     if attempts > MAX_PIN_ATTEMPTS:
         raise ApiError(429, "TOO_MANY_ATTEMPTS", "Too many attempts. Try again in 15 minutes.")
 
-    expected = store_mod.store.pin_hashes.get(slug)
+    expected = store_mod.get_pin_hash(slug)
     if not expected or store_mod._hash_pin(body.pin) != expected:
         raise ApiError(401, "INVALID_PIN", "That PIN is incorrect.")
 

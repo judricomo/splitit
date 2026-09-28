@@ -7,7 +7,8 @@ from fastapi import APIRouter, Request
 from ..errors import ApiError
 from ..models import Settlement, SettlementInput
 from ..security import require_group_access
-from ..store import _uid, store
+from .. import store as store_mod
+from ..store import _uid
 
 router = APIRouter(tags=["Settlements"])
 
@@ -15,9 +16,7 @@ router = APIRouter(tags=["Settlements"])
 @router.get("/g/{slug}/settlements", response_model=list[Settlement])
 def list_settlements(slug: str, request: Request) -> list[Settlement]:
     group = require_group_access(slug, request)
-    rows = [
-        s for s in store.settlements.values() if s.group_id == group.id and not s.deleted_at
-    ]
+    rows = [s for s in store_mod.group_settlements(group.id) if not s.deleted_at]
     rows.sort(key=lambda s: s.settled_on, reverse=True)
     return rows
 
@@ -41,14 +40,15 @@ def create_settlement(slug: str, input: SettlementInput, request: Request) -> Se
         deleted_at=None,
         version=1,
     )
-    store.settlements[settlement.id] = settlement
+    store_mod.create_settlement(settlement)
     return settlement
 
 
 @router.delete("/g/{slug}/settlements/{settlement_id}", status_code=204)
 def delete_settlement(slug: str, settlement_id: str, request: Request) -> None:
     require_group_access(slug, request)
-    settlement = store.settlements.get(settlement_id)
+    settlement = store_mod.get_settlement(settlement_id)
     if settlement is None:
         raise ApiError(404, "SETTLEMENT_NOT_FOUND", "That payment no longer exists.")
     settlement.deleted_at = datetime.now(timezone.utc)
+    store_mod.save_settlement(settlement)

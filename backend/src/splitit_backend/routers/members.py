@@ -6,7 +6,7 @@ from ..errors import ApiError
 from ..ledger import compute_balances
 from ..models import AddMemberInput, Member, RenameMemberInput
 from ..security import require_group_access
-from ..store import MEMBER_COLORS, _uid, group_expenses, group_settlements
+from ..store import MEMBER_COLORS, _uid, group_expenses, group_settlements, save_group
 
 router = APIRouter(tags=["Members"])
 
@@ -28,6 +28,7 @@ def add_member(slug: str, body: AddMemberInput, request: Request) -> Member:
         removed_at=None,
     )
     group.members.append(member)
+    save_group(group)
     return member
 
 
@@ -44,6 +45,7 @@ def rename_member(slug: str, member_id: str, body: RenameMemberInput, request: R
     ):
         raise ApiError(409, "DUPLICATE_MEMBER", f'"{trimmed}" is already in this group.')
     member.name = trimmed
+    save_group(group)
     return member
 
 
@@ -68,3 +70,4 @@ def remove_member(slug: str, member_id: str, request: Request) -> None:
     from datetime import datetime, timezone
 
     member.removed_at = datetime.now(timezone.utc)
+    save_group(group)

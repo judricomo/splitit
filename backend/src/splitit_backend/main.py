@@ -10,11 +10,13 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .errors import ApiError, api_error_handler, validation_error_handler
 from .routers import balances, expenses, groups, members, session, settlements
+from .db import init_db
 from .seed import seed_demo_group
 
 
 @asynccontextmanager
 async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
+    init_db()
     seed_demo_group()
     yield
 

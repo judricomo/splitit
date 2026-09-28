@@ -10,13 +10,13 @@ from datetime import datetime, timezone
 
 from .ledger import compute_splits
 from .models import Expense, Group, Member, Payer, SplitInput
-from .store import store
+from . import store as store_mod
 
 DEMO_SLUG = "kQ7xR2mVb9LtYc4PzNs1Aw"
 
 
 def seed_demo_group() -> None:
-    if DEMO_SLUG in store.groups:
+    if store_mod.get_group_or_none(DEMO_SLUG) is not None:
         return
 
     now = datetime.now(timezone.utc)
@@ -39,7 +39,7 @@ def seed_demo_group() -> None:
         members=members,
         version=1,
     )
-    store.groups[group.slug] = group
+    store_mod.create_group(group, pin_hash=None)
 
     def build(
         id: str,
@@ -114,4 +114,4 @@ def seed_demo_group() -> None:
         ),
     ]
     for e in expenses:
-        store.expenses[e.id] = e
+        store_mod.create_expense(e)
