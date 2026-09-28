@@ -149,6 +149,65 @@ See [`backend/README.md`](backend/README.md) and
 - **Frontend requests fail / CORS errors** — make sure the backend is running
   and that `SPLITIT_CORS_ORIGINS` includes the frontend's origin.
 
+## Tutorial: try it yourself
+
+With both servers running (`make dev`), open **http://localhost:8080**. You
+can follow along on the built-in **demo group** ("Open the demo group" on the
+homepage) or create your own — the flow is the same either way.
+
+### 1. Create a group (or open the demo)
+
+Give the group a name, pick a currency, add yourself and the people you're
+splitting with. No sign-up, no email — you get a secret link to share.
+
+![Homepage — create a group](docs/screenshots/01-home.png)
+
+### 2. Pick who you are
+
+The first time anyone opens the group link on a device, SplitIt asks which
+member they are. This is just a label for what you add from then on — not a
+password — and it's remembered on that device.
+
+![Who are you? picker](docs/screenshots/02-who-are-you.png)
+
+### 3. See balances at a glance
+
+The **Balances** tab shows your part of the tab, where everyone stands, and
+the shortest list of payments that settles everything up (fewer transfers
+than everyone paying everyone).
+
+![Balances tab](docs/screenshots/03-balances.png)
+
+### 4. Log an expense
+
+Click **Expense** to add what someone paid for. Choose one payer or several,
+then split it **equally**, by **exact amounts**, **percentages**, or
+**shares** — balances update immediately.
+
+![Expenses list](docs/screenshots/04-expenses.png)
+
+![New expense dialog](docs/screenshots/05-add-expense.png)
+
+### 5. Record payments
+
+When someone pays another member back (cash, bank transfer, whatever),
+record it under **Payments** — or tap **Mark as paid** directly on a
+suggested settlement in the Balances tab. Nothing here moves real money; it
+just keeps the ledger accurate.
+
+![Payments tab](docs/screenshots/06-settlements.png)
+
+### 6. Manage people and the group PIN
+
+The **People** tab lets you add or rename members, switch who you're posting
+as, and optionally lock the group behind a PIN if you want more than "anyone
+with the link" access.
+
+![People tab](docs/screenshots/07-people.png)
+
+That's the whole loop: **create → log expenses → check balances → settle
+up**. See [`docs/spec.md`](docs/spec.md) for the full product spec.
+
 ## Testing
 
 ```bash
